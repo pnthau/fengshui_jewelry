@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Unit Test Runner - Phong Thủy</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="assets/css/style.css?v=1.0.7" rel="stylesheet">
+    <style>
+        .test-case {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 5px solid #6c757d;
+            transition: all 0.2s ease;
+        }
+        .test-case.pass {
+            border-left-color: #2ec4b6;
+            background: rgba(46, 196, 182, 0.1);
+        }
+        .test-case.fail {
+            border-left-color: #e63946;
+            background: rgba(230, 57, 70, 0.1);
+        }
+        .summary-box {
+            border: 2px solid var(--accent-gold);
+            border-radius: 12px;
+            background: rgba(28, 31, 34, 0.9);
+        }
+    </style>
+</head>
+<body class="py-5">
+    <div class="container" style="max-width: 800px;">
+        <div class="text-center mb-5">
+            <h1 class="text-warning"><i class="bi bi-shield-check me-2"></i>FRONTEND UNIT TESTS</h1>
+            <p class="text-secondary">Hệ thống chạy kiểm thử các hàm tiện ích phía giao diện (JavaScript)</p>
+        </div>
+
+        <!-- Summary -->
+        <div class="summary-box p-4 mb-4 text-center">
+            <div class="row">
+                <div class="col-4">
+                    <h3 class="mb-0 text-white" id="total-tests">0</h3>
+                    <small class="text-secondary">Tổng số Test</small>
+                </div>
+                <div class="col-4">
+                    <h3 class="mb-0 text-success" id="passed-tests">0</h3>
+                    <small class="text-success fw-bold">Thành công</small>
+                </div>
+                <div class="col-4">
+                    <h3 class="mb-0 text-danger" id="failed-tests">0</h3>
+                    <small class="text-danger fw-bold">Thất bại</small>
+                </div>
+            </div>
+            <div class="progress mt-3" style="height: 10px;">
+                <div id="test-progress" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Details -->
+        <div class="glass-panel p-4 mb-4">
+            <h3 class="h5 mb-3 text-warning border-bottom border-secondary pb-2">
+                <i class="bi bi-calculator me-2"></i>1. getElementByYear(year) Tests
+            </h3>
+            <div id="element-tests-container"></div>
+        </div>
+
+        <div class="glass-panel p-4">
+            <h3 class="h5 mb-3 text-warning border-bottom border-secondary pb-2">
+                <i class="bi bi-cart-plus me-2"></i>2. getNewQuantity(currentQty, val) Tests
+            </h3>
+            <div id="quantity-tests-container"></div>
+        </div>
+    </div>
+
+    <!-- Import JavaScript file to test -->
+    <script src="assets/js/fengshui-utils.js"></script>
+
+    <script>
+        // Simple assertion library
+        const suite = {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            
+            assert: function(containerId, description, actual, expected) {
+                this.total++;
+                const container = document.getElementById(containerId);
+                const testDiv = document.createElement('div');
+                testDiv.className = 'test-case p-3 mb-2 rounded d-flex justify-content-between align-items-center';
+                
+                const isPassed = JSON.stringify(actual) === JSON.stringify(expected);
+                if (isPassed) {
+                    this.passed++;
+                    testDiv.classList.add('pass');
+                    testDiv.innerHTML = `
+                        <div>
+                            <span class="text-success me-2"><i class="bi bi-check-circle-fill"></i></span>
+                            <span class="text-white fw-bold">${description}</span>
+                        </div>
+                        <span class="badge bg-success-subtle text-success">ĐẠT</span>
+                    `;
+                } else {
+                    this.failed++;
+                    testDiv.classList.add('fail');
+                    testDiv.innerHTML = `
+                        <div>
+                            <span class="text-danger me-2"><i class="bi bi-x-circle-fill"></i></span>
+                            <span class="text-white fw-bold">${description}</span>
+                            <div class="small text-secondary mt-1">Kết quả thực tế: <code>${actual}</code> | Kỳ vọng: <code>${expected}</code></div>
+                        </div>
+                        <span class="badge bg-danger-subtle text-danger">LỖI</span>
+                    `;
+                }
+                container.appendChild(testDiv);
+            },
+            
+            updateSummary: function() {
+                document.getElementById('total-tests').innerText = this.total;
+                document.getElementById('passed-tests').innerText = this.passed;
+                document.getElementById('failed-tests').innerText = this.failed;
+                
+                const percentage = this.total > 0 ? (this.passed / this.total) * 100 : 0;
+                const progress = document.getElementById('test-progress');
+                progress.style.width = percentage + '%';
+                
+                if (this.failed > 0) {
+                    progress.className = 'progress-bar bg-danger';
+                } else {
+                    progress.className = 'progress-bar bg-success';
+                }
+            }
+        };
+
+        // Run tests on DOMContentLoaded
+        window.addEventListener('DOMContentLoaded', () => {
+            // === Group 1: getElementByYear ===
+            suite.assert('element-tests-container', 'Năm sinh 1968 phải là Mệnh THỔ', getElementByYear(1968), 'THO');
+            suite.assert('element-tests-container', 'Năm sinh 1990 phải là Mệnh THỔ', getElementByYear(1990), 'THO');
+            suite.assert('element-tests-container', 'Năm sinh 1984 phải là Mệnh KIM', getElementByYear(1984), 'KIM');
+            suite.assert('element-tests-container', 'Năm sinh 1992 phải là Mệnh KIM', getElementByYear(1992), 'KIM');
+            suite.assert('element-tests-container', 'Năm sinh 1982 phải là Mệnh THỦY', getElementByYear(1982), 'THUY');
+            suite.assert('element-tests-container', 'Năm sinh 1899 (nhỏ hơn 1900) phải trả về null', getElementByYear(1899), null);
+            suite.assert('element-tests-container', 'Năm sinh trong tương lai phải trả về null', getElementByYear(new Date().getFullYear() + 5), null);
+            suite.assert('element-tests-container', 'Nhập chữ (NaN) phải trả về null', getElementByYear('abc'), null);
+
+            // === Group 2: getNewQuantity ===
+            suite.assert('quantity-tests-container', 'Tăng số lượng từ 5 lên 1 đơn vị -> phải được 6', getNewQuantity(5, 1), 6);
+            suite.assert('quantity-tests-container', 'Giảm số lượng từ 5 đi 1 đơn vị -> phải còn 4', getNewQuantity(5, -1), 4);
+            suite.assert('quantity-tests-container', 'Giảm từ 1 đi 1 đơn vị -> giới hạn tối thiểu phải là 1', getNewQuantity(1, -1), 1);
+            suite.assert('quantity-tests-container', 'Tăng từ 99 lên 1 đơn vị -> giới hạn tối đa phải là 99', getNewQuantity(99, 1), 99);
+            suite.assert('quantity-tests-container', 'Đầu vào bị lỗi chữ (NaN) -> khởi tạo về 1 và cộng 1 -> phải được 2', getNewQuantity('abc', 1), 2);
+
+            suite.updateSummary();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,241 @@
+/* -------------------------------------------------------------
+ * CORE DESIGN SYSTEM - FENG SHUI JEWELRY (PREMIUM SENIOR-FRIENDLY)
+ * ------------------------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --primary-bg: #111315;
+    --card-bg: #1c1f22;
+    --text-primary: #f8f9fa;
+    --text-secondary: #adb5bd;
+    --accent-gold: #e5c060;
+    --accent-gold-hover: #f1d279;
+    --accent-ruby: #dc3545;
+    --border-color: #2d3238;
+    
+    /* Elements Color Palette */
+    --element-kim: #f1f3f5;
+    --element-moc: #2ec4b6;
+    --element-thuy: #0077b6;
+    --element-hoa: #e63946;
+    --element-tho: #b5838d;
+    
+    /* Font sizes customized for middle-aged/senior readability */
+    --font-heading: 'Outfit', sans-serif;
+    --font-body: 'Outfit', sans-serif;
+}
+
+body {
+    background-color: var(--primary-bg);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 1.15rem; /* Larger default font size for seniors */
+    line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    color: var(--accent-gold);
+}
+
+/* Glassmorphism containers */
+.glass-panel {
+    background: rgba(28, 31, 34, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Premium Navbar */
+.navbar-custom {
+    background: rgba(17, 19, 21, 0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.navbar-brand {
+    color: var(--accent-gold) !important;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.nav-link {
+    color: var(--text-secondary) !important;
+    font-size: 1.1rem;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: var(--accent-gold) !important;
+}
+
+/* Year Finder Widget */
+.year-finder-card {
+    border: 2px solid var(--accent-gold);
+    background: linear-gradient(135deg, #1c1f22 0%, #25292e 100%);
+}
+
+.btn-gold {
+    background-color: var(--accent-gold);
+    color: #111315;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-gold:hover {
+    background-color: var(--accent-gold-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(229, 192, 96, 0.3);
+    color: #111315;
+}
+
+/* Element Filter Buttons */
+.btn-element {
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    font-weight: 500;
+    border-radius: 30px;
+    padding: 8px 24px;
+    transition: all 0.3s ease;
+}
+
+.btn-element:hover, .btn-element.active {
+    border-color: var(--accent-gold);
+    color: #111315;
+    background-color: var(--accent-gold);
+}
+
+.btn-element.active[data-element="KIM"] { border-color: var(--element-kim); color: #111315; background-color: var(--element-kim); }
+.btn-element.active[data-element="MOC"] { border-color: var(--element-moc); color: #f8f9fa; background-color: var(--element-moc); }
+.btn-element.active[data-element="THUY"] { border-color: var(--element-thuy); color: #f8f9fa; background-color: var(--element-thuy); }
+.btn-element.active[data-element="HOA"] { border-color: var(--element-hoa); color: #f8f9fa; background-color: var(--element-hoa); }
+.btn-element.active[data-element="THO"] { border-color: var(--element-tho); color: #f8f9fa; background-color: var(--element-tho); }
+
+/* Product Cards */
+.product-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 100%;
+}
+
+.product-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+    border-color: rgba(229, 192, 96, 0.4);
+}
+
+.product-img-wrapper {
+    position: relative;
+    padding-top: 80%; /* Increased to 80% for slightly taller display */
+    background-color: #25292e;
+    overflow: hidden;
+}
+
+.product-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.product-card:hover .product-img {
+    transform: scale(1.08);
+}
+
+.product-body {
+    padding: 12px; /* Tighter padding */
+}
+
+.product-title {
+    font-size: 1.1rem; /* Compact font size */
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    height: 2.4rem; /* Restrict to exactly 2 lines of smaller font */
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.product-price {
+    font-size: 1.2rem; /* Compact font size */
+    font-weight: 700;
+    color: var(--accent-gold);
+    margin-bottom: 10px;
+}
+
+/* Badges for Elements */
+.badge-element {
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    margin-right: 5px;
+    text-transform: uppercase;
+}
+
+.badge-kim { background-color: #e9ecef; color: #343a40; }
+.badge-moc { background-color: var(--element-moc); color: #111315; }
+.badge-thuy { background-color: var(--element-thuy); color: #f8f9fa; }
+.badge-hoa { background-color: var(--element-hoa); color: #f8f9fa; }
+.badge-tho { background-color: var(--element-tho); color: #f8f9fa; }
+
+/* Voice Search Microphone button */
+.voice-search-btn {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    background-color: rgba(229, 192, 96, 0.15); /* Premium soft gold tint */
+    border-color: rgba(229, 192, 96, 0.3);
+    color: var(--accent-gold) !important; /* Gold icon */
+    font-size: 1.3rem; /* Larger icon for seniors */
+    transition: all 0.3s ease;
+}
+
+.voice-search-btn:hover {
+    background-color: rgba(229, 192, 96, 0.3); /* Slightly brighter tint on hover */
+    border-color: var(--accent-gold);
+    color: var(--accent-gold-hover) !important;
+}
+
+/* Voice search animation */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+    }
+}
+
+.voice-recording {
+    animation: pulse 1.5s infinite;
+    background-color: var(--accent-ruby) !important;
+    color: white !important;
+}
+
+/* Footer style */
+footer {
+    background-color: #0b0c0e;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 40px 0;
+}
