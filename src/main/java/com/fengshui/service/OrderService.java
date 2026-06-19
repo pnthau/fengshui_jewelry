@@ -3,7 +3,6 @@ package com.fengshui.service;
 import com.fengshui.entity.Order;
 import com.fengshui.entity.OrderItem;
 import com.fengshui.repository.*;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -12,13 +11,11 @@ public class OrderService implements IOrderService {
     private final IOrderRepository orderRepository;
     private final IOrderItemRepository orderItemRepository;
     private final IProductRepository productRepository;
-    private final IInventoryTransactionRepository transactionRepository;
 
     public OrderService() {
         this.orderRepository = new OrderRepository();
         this.orderItemRepository = new OrderItemRepository();
         this.productRepository = new ProductRepository();
-        this.transactionRepository = new InventoryTransactionRepository();
     }
 
     @Override
