@@ -9,7 +9,7 @@ public abstract class BaseRepository {
     private static final String USER = "root";
     private static final String PASSWORD = "123456";
 
-    public Connection getConnection() throws SQLException {
+    public static Connection getConnection() throws SQLException {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             return DriverManager.getConnection(URL, USER, PASSWORD);

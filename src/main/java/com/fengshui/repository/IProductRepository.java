@@ -2,7 +2,10 @@ package com.fengshui.repository;
 
 import com.fengshui.entity.Product;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.Set;
 
 public interface IProductRepository {
     List<Product> findAll();
@@ -19,4 +22,10 @@ public interface IProductRepository {
 
     List<Product> searchByName(String name);
     //boolean reduceStock(Connection connection, int productId, int quantity);
+
+    Set<String> getElementsForProduct(int productId);
+    void deleteElements(Connection conn, int productId) throws SQLException;
+    void addElements(Connection conn, int productId, String element) throws SQLException;
+
+    boolean updateInTransaction(Connection conn, Product product) throws SQLException;
 }
