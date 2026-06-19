@@ -36,7 +36,15 @@ dependencies {
     // JUnit 5 for Testing
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // Mockito for Mocking Servlet API (Request/Response)
+    testImplementation 'org.mockito:mockito-core:5.5.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.5.0'
+
+
 }
+
 
 test {
     useJUnitPlatform()
@@ -44,3 +52,8 @@ test {
         events "passed", "skipped", "failed"
     }
 }
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+

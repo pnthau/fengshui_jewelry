@@ -225,20 +225,19 @@ public class ProductRepository extends BaseRepository implements IProductReposit
     }
 
 
-//    @Override
-//    public boolean reduceStock(Connection connection, int productId, int quantity) {
-//        String sql = "UPDATE products SET quantity = quantity - ? WHERE id = ? AND quantity >= ?";
-//        int rowsUpdated = 0;
-//        // KHÔNG dùng try-with-resources cho connection ở đây vì nó do Service quản lý và đóng sau!
-//        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-//            preparedStatement.setInt(1, quantity);
-//            preparedStatement.setInt(2, productId);
-//            preparedStatement.setInt(3, quantity);
-//
-//            rowsUpdated = preparedStatement.executeUpdate();
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//        return rowsUpdated > 0;
-//    }
+    @Override
+    public boolean reduceStock(Connection connection, int productId, int quantity) {
+        String sql = "UPDATE products SET quantity = quantity - ? WHERE id = ? AND quantity >= ?";
+        int rowsUpdated = 0;
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setInt(1, quantity);
+            preparedStatement.setInt(2, productId);
+            preparedStatement.setInt(3, quantity);
+
+            rowsUpdated = preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return rowsUpdated > 0;
+    }
 }

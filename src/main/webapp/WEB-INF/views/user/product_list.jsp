@@ -179,6 +179,98 @@
     <%-- Đóng div.row --%>
 </main>
 
+<div class="modal fade" id="quickOrderModal" tabindex="-1" aria-labelledby="quickOrderModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-gold shadow-lg"
+             style="border: 2px solid var(--accent-gold); border-radius: 16px;">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title text-warning" id="quickOrderModalLabel">
+                    <i class="bi bi-telephone-outbound-fill me-2"></i> Đặt Hàng Nhanh
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Thông tin sản phẩm vắn tắt -->
+                <div
+                        class="d-flex align-items-center mb-4 p-3 rounded bg-black bg-opacity-25 border border-secondary">
+                    <img id="modalProductImage" src="" alt="" class="rounded me-3"
+                         style="width: 80px; height: 80px; object-fit: cover; border: 1px solid var(--border-color);"
+                         onerror="this.src='https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&auto=format&fit=crop'">
+                    <div>
+                        <h4 class="h5 text-white mb-1" id="modalProductName">Tên sản phẩm</h4>
+                        <div class="text-warning fw-bold fs-5" id="modalProductPrice">0 VNĐ</div>
+                    </div>
+                </div>
+
+                <!-- Hộp thông báo lỗi/thành công -->
+                <div id="modalAlert" class="alert d-none" role="alert"></div>
+
+                <!-- Form thông tin khách hàng -->
+                <form id="quickOrderForm" autocomplete="on">
+                    <input type="hidden" name="productId" id="modalProductId">
+
+                    <!-- Tăng giảm số lượng (Stepper) -->
+                    <div class="mb-4">
+                        <label class="form-label text-secondary fw-medium">Số lượng mua:</label>
+                        <div class="input-group" style="max-width: 180px;">
+                            <button class="btn btn-outline-secondary btn-lg" type="button"
+                                    id="btnDecreaseQty" style="font-weight: bold;">-
+                            </button>
+                            <input type="text"
+                                   class="form-control form-control-lg text-center fw-bold bg-dark text-white border-secondary"
+                                   id="modalQuantity" name="quantity" value="1" readonly>
+                            <button class="btn btn-outline-secondary btn-lg" type="button"
+                                    id="btnIncreaseQty" style="font-weight: bold;">+
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tên khách hàng -->
+                    <div class="mb-3">
+                        <label for="customerName" class="form-label text-secondary fw-medium">Họ và
+                            Tên của Ông/Bà <span class="text-danger">*</span></label>
+                        <input type="text"
+                               class="form-control form-control-lg bg-dark text-white border-secondary"
+                               id="customerName" name="customerName" placeholder="Ví dụ: Nguyễn Văn A"
+                               required>
+                    </div>
+
+                    <!-- Số điện thoại -->
+                    <div class="mb-3">
+                        <label for="customerPhone" class="form-label text-secondary fw-medium">Số
+                            điện thoại liên hệ <span class="text-danger">*</span></label>
+                        <input type="tel"
+                               class="form-control form-control-lg bg-dark text-white border-secondary"
+                               id="customerPhone" name="customerPhone" placeholder="Ví dụ: 0905123456"
+                               required>
+                    </div>
+
+                    <!-- Địa chỉ giao hàng -->
+                    <div class="mb-3">
+                        <label for="customerAddress" class="form-label text-secondary fw-medium">Địa
+                            chỉ nhận hàng <span class="text-danger">*</span></label>
+                        <textarea
+                                class="form-control form-control-lg bg-dark text-white border-secondary"
+                                id="customerAddress" name="customerAddress" rows="2"
+                                placeholder="Ví dụ: 123 Hùng Vương, Đà Nẵng" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-light px-4 py-2"
+                        data-bs-dismiss="modal">Hủy
+                </button>
+                <button type="button" class="btn btn-gold px-5 py-2 fs-5 fw-bold"
+                        id="btnSubmitOrder">
+                    <i class="bi bi-check-circle-fill me-2"></i> Xác Nhận Đặt Hàng
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- FOOTER -->
 <footer class="text-center">
     <div class="container">
@@ -191,7 +283,6 @@
 <script src="${pageContext.request.contextPath}/assets/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    // TODO 2: Viết logic Voice Search sử dụng Web Speech API cho nút "voiceBtn"
     const VoiceSearchModule = (function () {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition = null;
@@ -199,7 +290,7 @@
 
         function initialize(config) {
             if (!SpeechRecognition) {
-                console.warn("Trình duyệt không hỗ trợ Web Speech API.");
+                console.warn("error :  not support Web Speech API.");
                 if (config.voiceBtn) config.voiceBtn.style.display = 'none';
                 return;
             }
@@ -237,7 +328,37 @@
             });
         }
 
-        // --- Chỉ phơi bày (expose) API PUBLIC ra bên ngoài ---
+        return {
+            init: initialize
+        };
+    })();
+
+    const ModalManagerModule = (function () {
+        let bsModal = null;
+
+        function initialize({containerSelector, modalSelector, btnSelector, onBind}) {
+            const modalEL = document.querySelector(modalSelector);
+            const containerEL = document.querySelector(containerSelector);
+            if (!containerEL || !modalEL) {
+                return;
+            }
+
+            bsModal = new bootstrap.Modal(modalEL);
+
+            containerEL.addEventListener('click', function (event) {
+                const btn = event.target.closest(btnSelector);
+                if (btn) {
+                    if (typeof onBind === 'function') {
+                        onBind(btn);
+                    }
+                }
+                if (bsModal) {
+                    bsModal.show();
+                }
+            });
+
+        }
+
         return {
             init: initialize
         };
@@ -266,8 +387,6 @@
         }
     });
 
-
-    // Xử lý Tính Mệnh theo năm sinh sử dụng hàm thuần khiết từ fengshui-utils.js
     function calculateElement() {
         const yearInput = document.getElementById('birthYearInput');
         const year = parseInt(yearInput.value);
@@ -287,6 +406,123 @@
             + encodeURIComponent(elementName)
             + "&year=" + encodeURIComponent(year);
     }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const modalEl = document.getElementById('quickOrderModal');
+        let idInputEl = null;
+        let nameEl = null;
+        let priceEl = null;
+        let imgEl = null;
+
+        let qtyInputEl = null;
+        let btnDecreaseEl = null;
+        let btnIncreaseEl = null;
+
+        let customerNameInputEl = null;
+        let customerPhoneInputEl = null;
+        let customerAddressInputEl = null;
+        let btnSubmitOrderEl = null;
+        if (modalEl) {
+            idInputEl = modalEl.querySelector('#modalProductId');
+            nameEl = modalEl.querySelector('#modalProductName');
+            priceEl = modalEl.querySelector('#modalProductPrice');
+            imgEl = modalEl.querySelector('#modalProductImage');
+
+            qtyInputEl = modalEl.querySelector('#modalQuantity');
+            btnDecreaseEl = modalEl.querySelector('#btnDecreaseQty');
+            btnIncreaseEl = modalEl.querySelector('#btnIncreaseQty');
+
+            customerNameInputEl = modalEl.querySelector('#customerName');
+            customerPhoneInputEl = modalEl.querySelector('#customerPhone');
+            customerAddressInputEl = modalEl.querySelector('#customerAddress');
+            btnSubmitOrderEl = modalEl.querySelector('#btnSubmitOrder');
+        }
+
+        ModalManagerModule.init({
+            containerSelector: '#productsGrid',
+            modalSelector: '#quickOrderModal',
+            btnSelector: '.btn-quick-order',
+            onBind: function (btn) {
+                if (imgEl) {
+                    imgEl.src = btn.dataset.image;
+                }
+                if (nameEl) {
+                    nameEl.textContent = btn.dataset.name;
+                }
+                if (priceEl) {
+                    priceEl.textContent = Number(btn.dataset.price).toLocaleString('vi-VN') + ' VNĐ';
+                }
+                if (idInputEl) {
+                    idInputEl.value = btn.dataset.id;
+                }
+                if (qtyInputEl) {
+                    qtyInputEl.value = 1;
+                }
+            },
+        });
+        if (btnDecreaseEl && qtyInputEl) {
+            btnDecreaseEl.addEventListener('click', function (event) {
+                let currQty = parseInt(qtyInputEl.value) || 1;
+                if (currQty > 1) {
+                    currQty -= 1;
+                    qtyInputEl.value = currQty;
+                }
+            });
+        }
+        if (btnIncreaseEl && qtyInputEl) {
+            btnIncreaseEl.addEventListener('click', function (event) {
+                let currQty = parseInt(qtyInputEl.value) || 1;
+                currQty += 1;
+                qtyInputEl.value = currQty;
+            });
+        }
+        if (btnSubmitOrderEl && qtyInputEl && idInputEl && customerPhoneInputEl && customerNameInputEl && customerAddressInputEl) {
+            btnSubmitOrderEl.addEventListener('click', async function (event) {
+                let productId = idInputEl.value || '';
+                let quantity = qtyInputEl.value || '1';
+                let customerPhone = customerPhoneInputEl.value || '';
+                let customerName = customerNameInputEl.value || '';
+                let customerAddress = customerAddressInputEl.value || '';
+
+                //DELETE : test du lieu guoi di xong co the xoa
+                const orderData = {
+                    productId: productId,
+                    quantity: quantity,
+                    customerPhone: customerPhone,
+                    customerName: customerName,
+                    customerAddress: customerAddress
+                }
+
+                console.log("Dữ liệu chuẩn bị gửi đi:", orderData);
+                const url = '${pageContext.request.contextPath}/quick-order';
+
+                const params = new URLSearchParams();
+                params.append('productId', productId);
+                params.append('quantity', quantity);
+                params.append('customerPhone', customerPhone);
+                params.append('customerName', customerName);
+                params.append('customerAddress', customerAddress);
+                try {
+                    const response = await fetch(url, {
+                        method: 'post',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: params.toString()
+                    });
+                    if (response.ok) {
+                        alert("🎉 Đặt hàng thành công!");
+                        bootstrap.Modal.getInstance(modalEl).hide();
+                    } else {
+                        alert("❌ Có lỗi xảy ra từ Server!");
+                    }
+                } catch (error) {
+                    console.error("Lỗi:", error);
+                    alert("⚠️ Không thể kết nối đến máy chủ.");
+                }
+            });
+        }
+    });
 </script>
 
 </body>

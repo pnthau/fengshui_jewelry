@@ -2,6 +2,7 @@ package com.fengshui.repository;
 
 import com.fengshui.entity.Product;
 
+import java.sql.Connection;
 import java.util.List;
 
 public interface IProductRepository {
@@ -18,5 +19,6 @@ public interface IProductRepository {
     List<Product> findByElement(String element);
 
     List<Product> searchByName(String name);
-    //boolean reduceStock(Connection connection, int productId, int quantity);
+
+    boolean reduceStock(Connection connection, int productId, int quantity);
 }

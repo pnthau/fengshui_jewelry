@@ -86,13 +86,20 @@ public class UserRepository extends BaseRepository implements IUserRepository {
     public boolean save(User user) {
         int rowsInserted = 0;
         try (Connection connection = getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(INSERT_USER)) {
+             PreparedStatement preparedStatement = connection.prepareStatement(INSERT_USER, PreparedStatement.RETURN_GENERATED_KEYS)) {
 
             preparedStatement.setString(1, user.getUsername());
             preparedStatement.setString(2, user.getPassword());
             preparedStatement.setString(3, user.getRole());
 
             rowsInserted = preparedStatement.executeUpdate();
+            if (rowsInserted > 0) {
+                try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        user.setId(generatedKeys.getInt(1));
+                    }
+                }
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }

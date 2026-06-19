@@ -2,6 +2,7 @@ package com.fengshui.service;
 
 import com.fengshui.entity.Order;
 import com.fengshui.entity.OrderItem;
+import com.fengshui.entity.Product;
 import com.fengshui.repository.*;
 
 import java.sql.Connection;
@@ -42,14 +43,22 @@ public class OrderService implements IOrderService {
         try (Connection connection = ((BaseRepository) orderRepository).getConnection()) {
             connection.setAutoCommit(false);
             try {
-                // 1. save order
                 boolean orderSaved = orderRepository.save(connection, order);
                 if (!orderSaved) {
                     throw new SQLException("Save() Order failure");
                 }
                 for (OrderItem item : items) {
                     item.setOrderId(order.getId());
-                    //2. save item
+
+                    Product product = productRepository.findByID(item.getProductId());
+                    if (product == null || product.getQuantity() < item.getQuantity()) {
+                        throw new SQLException("Not enough stock for product Id: " + item.getProductId()
+                                + " (Required: " + item.getQuantity() + ", Available: "
+                                + (product != null ? product.getQuantity() : 0) + ")");
+                    }
+
+                    // 2. save item (Database trigger trg_after_insert_order_items sẽ tự động trừ
+                    // kho)
                     boolean itemSaved = orderItemRepository.save(connection, item);
                     if (!itemSaved) {
                         throw new SQLException("Save() OrderItem failure");
