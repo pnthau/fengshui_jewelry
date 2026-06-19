@@ -90,13 +90,13 @@ public class ProductRepositoryTest {
     @Test
     public void testSearchByName() {
         assertDoesNotThrow(() -> {
-            // Thử tìm kiếm với chữ "Thạch" (hoặc từ khóa có sẵn trong DB mẫu của bạn)
-            List<Product> products = productRepository.searchByName("Thạch");
+            // Thử tìm kiếm với chữ "Obsidian" (không dấu để tránh lỗi font DB)
+            List<Product> products = productRepository.searchByName("Obsidian");
             assertNotNull(products);
-            assertFalse(products.isEmpty(), "Tìm kiếm từ khóa 'Thạch' phải ra kết quả!");
+            assertFalse(products.isEmpty(), "Tìm kiếm từ khóa 'Obsidian' phải ra kết quả!");
 
             Product p = products.get(0);
-            assertTrue(p.getName().contains("Thạch"), "Tên sản phẩm tìm thấy phải chứa từ khóa tìm kiếm!");
+            assertTrue(p.getName().contains("Obsidian"), "Tên sản phẩm tìm thấy phải chứa từ khóa tìm kiếm!");
             assertNotNull(p.getElements(), "Elements của sản phẩm tìm được không được null!");
             System.out.println("✅ Test searchByName() thành công! Sản phẩm tìm thấy: " + p.getName());
         });

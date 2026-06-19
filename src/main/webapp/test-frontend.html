@@ -65,11 +65,25 @@
             <div id="element-tests-container"></div>
         </div>
 
-        <div class="glass-panel p-4">
+        <div class="glass-panel p-4 mb-4">
             <h3 class="h5 mb-3 text-warning border-bottom border-secondary pb-2">
                 <i class="bi bi-cart-plus me-2"></i>2. getNewQuantity(currentQty, val) Tests
             </h3>
             <div id="quantity-tests-container"></div>
+        </div>
+
+        <div class="glass-panel p-4 mb-4">
+            <h3 class="h5 mb-3 text-warning border-bottom border-secondary pb-2">
+                <i class="bi bi-telephone me-2"></i>3. validatePhoneNumber(phone) Tests
+            </h3>
+            <div id="phone-tests-container"></div>
+        </div>
+
+        <div class="glass-panel p-4">
+            <h3 class="h5 mb-3 text-warning border-bottom border-secondary pb-2">
+                <i class="bi bi-check2-square me-2"></i>4. validateOrderInput(name, phone, address) Tests
+            </h3>
+            <div id="validation-tests-container"></div>
         </div>
     </div>
 
@@ -150,6 +164,22 @@
             suite.assert('quantity-tests-container', 'Giảm từ 1 đi 1 đơn vị -> giới hạn tối thiểu phải là 1', getNewQuantity(1, -1), 1);
             suite.assert('quantity-tests-container', 'Tăng từ 99 lên 1 đơn vị -> giới hạn tối đa phải là 99', getNewQuantity(99, 1), 99);
             suite.assert('quantity-tests-container', 'Đầu vào bị lỗi chữ (NaN) -> khởi tạo về 1 và cộng 1 -> phải được 2', getNewQuantity('abc', 1), 2);
+
+            // === Group 3: validatePhoneNumber ===
+            suite.assert('phone-tests-container', 'Số điện thoại chuẩn 10 số -> phải hợp lệ (true)', validatePhoneNumber('0905123456'), true);
+            suite.assert('phone-tests-container', 'Số điện thoại có khoảng trắng, dấu chấm -> phải hợp lệ (true)', validatePhoneNumber('0905.123-456 '), true);
+            suite.assert('phone-tests-container', 'Số điện thoại 11 số -> phải hợp lệ (true)', validatePhoneNumber('01234567890'), true);
+            suite.assert('phone-tests-container', 'Số điện thoại có chứa chữ cái -> không hợp lệ (false)', validatePhoneNumber('0905123abc'), false);
+            suite.assert('phone-tests-container', 'Số điện thoại quá ngắn (5 số) -> không hợp lệ (false)', validatePhoneNumber('12345'), false);
+            suite.assert('phone-tests-container', 'Số điện thoại quá dài (15 số) -> không hợp lệ (false)', validatePhoneNumber('0905123456789012'), false);
+            suite.assert('phone-tests-container', 'Không nhập gì (null/empty) -> không hợp lệ (false)', validatePhoneNumber(''), false);
+
+            // === Group 4: validateOrderInput ===
+            suite.assert('validation-tests-container', 'Thông tin đầy đủ và đúng định dạng -> trả về null', validateOrderInput('Nguyễn Văn A', '0905123456', 'Đà Nẵng'), null);
+            suite.assert('validation-tests-container', 'Thiếu tên -> trả về lỗi yêu cầu nhập tên', validateOrderInput('  ', '0905123456', 'Đà Nẵng'), 'Vui lòng nhập Họ và Tên của Ông/Bà.');
+            suite.assert('validation-tests-container', 'Thiếu số điện thoại -> trả về lỗi yêu cầu nhập SĐT', validateOrderInput('Nguyễn Văn A', '', 'Đà Nẵng'), 'Vui lòng nhập Số điện thoại.');
+            suite.assert('validation-tests-container', 'Thiếu địa chỉ -> trả về lỗi yêu cầu nhập địa chỉ', validateOrderInput('Nguyễn Văn A', '0905123456', '  '), 'Vui lòng nhập Địa chỉ nhận hàng.');
+            suite.assert('validation-tests-container', 'Số điện thoại sai định dạng -> trả về lỗi SĐT không hợp lệ', validateOrderInput('Nguyễn Văn A', '123', 'Đà Nẵng'), 'Số điện thoại không hợp lệ (từ 9 đến 12 chữ số).');
 
             suite.updateSummary();
         });

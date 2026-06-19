@@ -46,10 +46,46 @@ function getNewQuantity(currentQty, val) {
     return nextQty;
 }
 
+/**
+ * Validates a Vietnamese phone number (9 to 12 digits, ignoring spaces, dots, hyphens).
+ * @param {string} phone - The input phone number
+ * @returns {boolean} - true if valid, false otherwise
+ */
+function validatePhoneNumber(phone) {
+    if (!phone) return false;
+    const cleanPhone = phone.replace(/[\s.-]/g, '');
+    return /^\d{9,12}$/.test(cleanPhone);
+}
+
+/**
+ * Validates the order input fields.
+ * @param {string} name - Customer name
+ * @param {string} phone - Customer phone
+ * @param {string} address - Customer address
+ * @returns {string|null} - Null if valid, or an error message string if invalid
+ */
+function validateOrderInput(name, phone, address) {
+    if (!name || !name.trim()) {
+        return "Vui lòng nhập Họ và Tên của Ông/Bà.";
+    }
+    if (!phone || !phone.trim()) {
+        return "Vui lòng nhập Số điện thoại.";
+    }
+    if (!address || !address.trim()) {
+        return "Vui lòng nhập Địa chỉ nhận hàng.";
+    }
+    if (!validatePhoneNumber(phone)) {
+        return "Số điện thoại không hợp lệ (từ 9 đến 12 chữ số).";
+    }
+    return null;
+}
+
 // Export for Node environments (if any) to keep it fully cross-compatible
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
     module.exports = {
         getElementByYear,
-        getNewQuantity
+        getNewQuantity,
+        validatePhoneNumber,
+        validateOrderInput
     };
 }
