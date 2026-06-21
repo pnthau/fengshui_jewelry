@@ -10,4 +10,7 @@ public interface IOrderService {
     Order findByID(int id);
     boolean placeOrder(Order order, List<OrderItem> items);
     boolean updateStatus(int id, String status);
+
+    List<OrderItem> findItemsByOrderID(int orderId);
+    boolean delete(int id);
 }
