@@ -2,10 +2,7 @@ package com.fengshui.repository;
 
 import com.fengshui.entity.Product;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -38,7 +35,8 @@ public class ProductRepository extends BaseRepository implements IProductReposit
                 product.setYoutubeURL(resultSet.getString("youtube_url"));
                 product.setStatus(resultSet.getString("status"));
                 product.setDescription(resultSet.getString("description"));
-                product.setElements(getAllElementByProduct(connection, product.getId()));
+                // product.setElements(getAllElementByProduct(connection, product.getId()));
+                product.setElements(getElementsForProduct(product.getId()));
                 products.add(product);
             }
         } catch (SQLException e) {
@@ -72,6 +70,9 @@ public class ProductRepository extends BaseRepository implements IProductReposit
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        if (product != null) {
+            product.setElements(getElementsForProduct(id));
+        }
         return product;
     }
 
@@ -104,28 +105,28 @@ public class ProductRepository extends BaseRepository implements IProductReposit
         return rowsInserted > 0;
     }
 
-    @Override
-    public boolean update(Product product) {
-        int rowsUpdated = 0;
-        try (Connection connection = getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_PRODUCT)) {
-
-            preparedStatement.setString(1, product.getName());
-            preparedStatement.setBigDecimal(2, product.getPrice());
-            preparedStatement.setInt(3, product.getQuantity());
-            preparedStatement.setString(4, product.getMaterial());
-            preparedStatement.setString(5, product.getImageURL());
-            preparedStatement.setString(6, product.getYoutubeURL());
-            preparedStatement.setString(7, product.getStatus());
-            preparedStatement.setString(8, product.getDescription());
-            preparedStatement.setInt(9, product.getId());
-
-            rowsUpdated = preparedStatement.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return rowsUpdated > 0;
-    }
+//    @Override
+//    public boolean update(Product product) {
+//        int rowsUpdated = 0;
+//        try (Connection connection = getConnection();
+//             PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_PRODUCT)) {
+//
+//            preparedStatement.setString(1, product.getName());
+//            preparedStatement.setBigDecimal(2, product.getPrice());
+//            preparedStatement.setInt(3, product.getQuantity());
+//            preparedStatement.setString(4, product.getMaterial());
+//            preparedStatement.setString(5, product.getImageURL());
+//            preparedStatement.setString(6, product.getYoutubeURL());
+//            preparedStatement.setString(7, product.getStatus());
+//            preparedStatement.setString(8, product.getDescription());
+//            preparedStatement.setInt(9, product.getId());
+//
+//            rowsUpdated = preparedStatement.executeUpdate();
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//        }
+//        return rowsUpdated > 0;
+//    }
 
     @Override
     public List<Product> findByElement(String element) {
@@ -225,6 +226,82 @@ public class ProductRepository extends BaseRepository implements IProductReposit
     }
 
 
+//    @Override
+//    public boolean reduceStock(Connection connection, int productId, int quantity) {
+//        String sql = "UPDATE products SET quantity = quantity - ? WHERE id = ? AND quantity >= ?";
+//        int rowsUpdated = 0;
+//        // KHÔNG dùng try-with-resources cho connection ở đây vì nó do Service quản lý và đóng sau!
+//        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+//            preparedStatement.setInt(1, quantity);
+//            preparedStatement.setInt(2, productId);
+//            preparedStatement.setInt(3, quantity);
+//
+//            rowsUpdated = preparedStatement.executeUpdate();
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//        }
+//        return rowsUpdated > 0;
+//    }
+
+    @Override
+    public Set<String> getElementsForProduct(int productId) {
+        Set<String> elements = new HashSet<>();
+        String sql = "SELECT element FROM product_elements WHERE product_id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, productId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                elements.add(rs.getString("element"));
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return elements;
+    }
+
+    @Override
+    public void deleteElements(Connection conn, int productId) throws SQLException {
+        String sql = "DELETE FROM product_elements WHERE product_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, productId);
+            ps.executeUpdate();
+        }
+    }
+
+    @Override
+    public void addElements(Connection conn, int productId, String element) throws SQLException {
+        String sql = "INSERT INTO product_elements (product_id, element) VALUES (?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, productId);
+            ps.setString(2, element);
+            ps.executeUpdate();
+        }
+    }
+    @Override
+    public boolean update(Product product) {
+        try (Connection conn = getConnection()) {
+            return updateInTransaction(conn, product);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean updateInTransaction(Connection conn, Product product) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(UPDATE_PRODUCT)) {
+            ps.setString(1, product.getName());
+            ps.setBigDecimal(2, product.getPrice());
+            ps.setInt(3, product.getQuantity());
+            ps.setString(4, product.getMaterial());
+            ps.setString(5, product.getImageURL());
+            ps.setString(6, product.getYoutubeURL());
+            ps.setString(7, product.getStatus());
+            ps.setString(8, product.getDescription());
+            ps.setInt(9, product.getId());
+            return ps.executeUpdate() > 0;
+        }
+    }
+
     @Override
     public boolean reduceStock(Connection connection, int productId, int quantity) {
         String sql = "UPDATE products SET quantity = quantity - ? WHERE id = ? AND quantity >= ?";
@@ -239,5 +316,34 @@ public class ProductRepository extends BaseRepository implements IProductReposit
             e.printStackTrace();
         }
         return rowsUpdated > 0;
+
+    }
+    @Override
+    public boolean save(Connection conn, Product product) throws SQLException {
+        String query = "INSERT INTO products (name, price, quantity, material, image_url, description) VALUES (?, ?, ?, ?, ?, ?)";
+
+        // Bắt buộc phải cấu hình Statement.RETURN_GENERATED_KEYS để lấy ID tự tăng sinh ra từ DB
+        try (PreparedStatement stmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, product.getName());
+            stmt.setBigDecimal(2, product.getPrice());
+            stmt.setInt(3, product.getQuantity());
+            stmt.setString(4, product.getMaterial());
+            stmt.setString(5, product.getImageURL());
+            stmt.setString(6, product.getDescription());
+
+            int rowAffected = stmt.executeUpdate();
+
+            if (rowAffected > 0) {
+                // Lấy ID tự sinh của sản phẩm vừa INSERT thành công
+                try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        int generatedId = generatedKeys.getInt(1);
+                        product.setId(generatedId); // GÁN NGƯỢC ID VÀO ĐỐI TƯỢNG PRODUCT
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 }
