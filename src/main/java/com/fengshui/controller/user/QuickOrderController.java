@@ -30,7 +30,6 @@ public class QuickOrderController extends HttpServlet {
         req.setCharacterEncoding("UTF-8");
         resp.setContentType("application/json;charset=UTF-8");
 
-
         String productIdStr = req.getParameter("productId");
         int productId = Integer.parseInt(productIdStr);
 
