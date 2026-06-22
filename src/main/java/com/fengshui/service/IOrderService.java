@@ -16,4 +16,7 @@ public interface IOrderService {
     boolean placeOrderFromCart(Order order, List<CartItem> items);
 
     boolean updateStatus(int id, String status);
+
+    List<OrderItem> findItemsByOrderID(int orderId);
+    boolean delete(int id);
 }
