@@ -1,11 +1,13 @@
 package com.fengshui.service;
 
+import com.fengshui.entity.CartItem;
 import com.fengshui.entity.Order;
 import com.fengshui.entity.OrderItem;
 import com.fengshui.entity.Product;
 import com.fengshui.repository.*;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class OrderService implements IOrderService {
@@ -17,6 +19,14 @@ public class OrderService implements IOrderService {
         this.orderRepository = new OrderRepository();
         this.orderItemRepository = new OrderItemRepository();
         this.productRepository = new ProductRepository();
+    }
+
+
+    public OrderService(IOrderRepository orderRepo, IOrderItemRepository orderItemRepo, IProductRepository prodRepo) {
+        this.orderRepository = orderRepo;
+        this.orderItemRepository = orderItemRepo;
+        this.productRepository = prodRepo;
+        this.transactionRepository = new InventoryTransactionRepository(); // Tạm để nguyên
     }
 
     @Override
@@ -49,7 +59,9 @@ public class OrderService implements IOrderService {
 
                     Product product = productRepository.findByID(item.getProductId());
                     if (product == null || product.getQuantity() < item.getQuantity()) {
-                        throw new SQLException("Not enough stock for product Id: " + item.getProductId()
+                        String productName = product != null ? product.getName() : "";
+
+                        throw new SQLException("Not enough stock for product : " + productName
                                 + " (Required: " + item.getQuantity() + ", Available: "
                                 + (product != null ? product.getQuantity() : 0) + ")");
                     }
@@ -67,16 +79,32 @@ public class OrderService implements IOrderService {
             } catch (SQLException innerEx) {
                 connection.rollback();
                 System.out.println("❌ Order failure! ROLLBACK " + innerEx.getMessage());
+                throw new RuntimeException(innerEx.getMessage());
             }
         } catch (SQLException outerEx) {
             outerEx.printStackTrace();
         }
         return isSuccess;
     }
+
+    @Override
+    public boolean placeOrderFromCart(Order order, List<CartItem> items) {
+        List<OrderItem> orderItems = new ArrayList<>();
+        for (CartItem cartItem : items) {
+            OrderItem item = new OrderItem();
+            item.setProductId(cartItem.getProduct().getId());
+            item.setQuantity(cartItem.getQuantity());
+            item.setPriceAtPurchase(cartItem.getProduct().getPrice());
+            orderItems.add(item);
+
+        }
+        return this.placeOrder(order, orderItems);
+
     @Override
     public List<OrderItem> findItemsByOrderID(int orderId) {
         return orderItemRepository.findByOrderID(orderId);
     }
+      
     @Override
     public boolean delete(int id) {
         return orderRepository.delete(id);
