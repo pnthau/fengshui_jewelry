@@ -7,11 +7,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="context-path" content="${pageContext.request.contextPath}">
     <title>Danh Sách Trang Sức Phong Thủy</title>
     <!-- Bootstrap 5 CSS -->
     <link href="${pageContext.request.contextPath}/assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="${pageContext.request.contextPath}/assets/css/style.css?v=1.0.7" rel="stylesheet">
+    <style>
+        /* Custom Scrollbar cho Modal Giỏ hàng */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: var(--accent-gold, #f39c12);
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #e67e22;
+        }
+
+        /* --- CUSTOM TOOLTIP KHỔNG LỒ CHO NGƯỜI LỚN TUỔI --- */
+        .tooltip-inner {
+            font-size: 16px !important;
+            font-weight: bold;
+            padding: 8px 16px;
+            background-color: #1a1a1a !important; /* Nền đen xám */
+            color: #f39c12 !important; /* Chữ vàng */
+            border: 2px solid #f39c12;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4);
+            max-width: 300px; /* Cho phép chữ dài không bị xuống dòng vụn */
+        }
+
+        /* Mũi tên của Tooltip */
+        .tooltip.bs-tooltip-top .tooltip-arrow::before {
+            border-top-color: #f39c12 !important;
+        }
+
+        .tooltip.bs-tooltip-bottom .tooltip-arrow::before {
+            border-bottom-color: #f39c12 !important;
+        }
+
+        .tooltip.bs-tooltip-start .tooltip-arrow::before,
+        .tooltip.bs-tooltip-left .tooltip-arrow::before {
+            border-left-color: #f39c12 !important;
+        }
+
+        .tooltip.bs-tooltip-end .tooltip-arrow::before,
+        .tooltip.bs-tooltip-right .tooltip-arrow::before {
+            border-right-color: #f39c12 !important;
+        }
+    </style>
 </head>
 <body>
 
@@ -50,15 +103,17 @@
                         <input type="text" name="keyword" id="search-input"
                                class="form-control bg-dark text-white border-secondary"
                                placeholder="Nhập tên sản phẩm..."
-                               value="${keyword}">
+                               value="${keyword}"
+                               data-bs-toggle="tooltip" data-bs-placement="bottom" title="Nhập vô ní">
 
                         <!-- Nút micro tìm kiếm giọng nói -->
                         <button class="btn voice-search-btn px-3" type="button" id="voice-btn"
-                                title="Tìm bằng giọng nói">
+                                data-bs-toggle="tooltip" data-bs-placement="bottom" title="Nói đi ní">
                             <i class="bi bi-mic-fill"></i>
                         </button>
 
-                        <button class="btn btn-gold px-3" type="submit">
+                        <button class="btn btn-gold px-3" type="submit"
+                                data-bs-toggle="tooltip" data-bs-placement="bottom" title="Bấm đi ní">
                             <i class="bi bi-search"></i>
                         </button>
                     </div>
@@ -130,6 +185,12 @@
                                  class="product-img"
                                  alt="${product.name}"
                                  onerror="this.src='https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&auto=format&fit=crop'">
+                            <!-- Nút thêm giỏ hàng cực cháy (Mở rộng có chữ) -->
+                            <button class="btn-add-cart-icon"
+                                    onclick="addToCart(event, '${product.id}', '${fn:escapeXml(product.name)}', ${product.price}, '${product.imageURL}')"
+                                    data-bs-toggle="tooltip" data-bs-placement="top" title="Thêm vào giỏ hàng">
+                                <i class="bi bi-cart-plus-fill"></i>
+                            </button>
                         </div>
                         <div class="product-body">
                             <div class="mb-2">
@@ -271,6 +332,80 @@
     </div>
 </div>
 
+<!-- FLOATING CART BUTTON -->
+<div class="floating-cart-btn" onclick="openCartModal()" data-bs-toggle="tooltip" data-bs-placement="left"
+     title="Giỏ Hàng Của Bạn">
+    <i class="bi bi-cart3"></i>
+    <span class="cart-badge" id="cartBadgeCount">${sessionScope.cart != null ? sessionScope.cart.totalQuantity : 0}</span>
+</div>
+
+<!-- CART MODAL -->
+<div class="modal fade" id="cartModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-dark text-white border-gold shadow-lg"
+             style="border: 2px solid var(--accent-gold); border-radius: 16px;">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title text-warning"><i class="bi bi-cart-check-fill me-2"></i> Giỏ Hàng Của Bạn</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Nửa trái: Danh sách sản phẩm -->
+                    <div class="col-md-6 border-end border-secondary">
+                        <h6 class="text-secondary mb-3"><i class="bi bi-bag-heart-fill"></i> Sản phẩm đã chọn</h6>
+                        <div id="cartItemsContainer" class="pe-2 custom-scrollbar"
+                             style="max-height: 45vh; overflow-y: auto;">
+                            <!-- Danh sách sản phẩm trong giỏ sẽ render ở đây -->
+                        </div>
+                    </div>
+
+                    <!-- Nửa phải: Form thông tin khách hàng -->
+                    <div class="col-md-6">
+                        <h6 class="text-secondary mb-3"><i class="bi bi-person-lines-fill"></i> Thông tin giao hàng</h6>
+                        <form id="cartOrderForm">
+                            <div class="mb-3">
+                                <label for="cartCustomerName" class="form-label text-white small">Họ và Tên <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" id="cartCustomerName"
+                                       class="form-control bg-dark text-white border-secondary"
+                                       placeholder="Ví dụ: Nguyễn Văn A" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="cartCustomerPhone" class="form-label text-white small">Số điện thoại <span
+                                        class="text-danger">*</span></label>
+                                <input type="tel" id="cartCustomerPhone"
+                                       class="form-control bg-dark text-white border-secondary"
+                                       placeholder="Ví dụ: 0905123456" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="cartCustomerAddress" class="form-label text-white small">Địa chỉ nhận hàng
+                                    <span class="text-danger">*</span></label>
+                                <textarea id="cartCustomerAddress"
+                                          class="form-control bg-dark text-white border-secondary" rows="3"
+                                          placeholder="Ví dụ: 123 Hùng Vương, Đà Nẵng" required></textarea>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center bg-black bg-opacity-50 rounded p-2 px-3 border border-warning shadow">
+                    <span class="text-white me-3" style="font-size: 1.1rem;">Tổng Tiền:</span>
+                    <span class="text-warning fw-bold" style="font-size: 1.4rem;" id="cartTotalPrice">0 VNĐ</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-light px-4 py-2" data-bs-dismiss="modal">Tiếp Tục Mua
+                    </button>
+                    <button type="button" class="btn btn-gold px-4 py-2 fs-5 fw-bold" onclick="checkoutCart()">Xác Nhận
+                        Đặt Hàng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- FOOTER -->
 <footer class="text-center">
     <div class="container">
@@ -283,6 +418,15 @@
 <script src="${pageContext.request.contextPath}/assets/js/bootstrap.bundle.min.js"></script>
 
 <script>
+    // Khởi tạo các thành phần UI
+    document.addEventListener('DOMContentLoaded', () => {
+        // Kích hoạt Bootstrap Tooltip
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+
     const VoiceSearchModule = (function () {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition = null;
@@ -351,9 +495,9 @@
                     if (typeof onBind === 'function') {
                         onBind(btn);
                     }
-                }
-                if (bsModal) {
-                    bsModal.show();
+                    if (bsModal) {
+                        bsModal.show();
+                    }
                 }
             });
 
@@ -484,17 +628,8 @@
                 let customerName = customerNameInputEl.value || '';
                 let customerAddress = customerAddressInputEl.value || '';
 
-                //DELETE : test du lieu guoi di xong co the xoa
-                const orderData = {
-                    productId: productId,
-                    quantity: quantity,
-                    customerPhone: customerPhone,
-                    customerName: customerName,
-                    customerAddress: customerAddress
-                }
-
-                console.log("Dữ liệu chuẩn bị gửi đi:", orderData);
-                const url = '${pageContext.request.contextPath}/quick-order';
+                const contextPath = "${pageContext.request.contextPath}";
+                const url = contextPath + 'quick-order';
 
                 const params = new URLSearchParams();
                 params.append('productId', productId);
@@ -523,6 +658,10 @@
             });
         }
     });
+
+    // Khai báo biến toàn cục để file cart.js có thể lấy được đường dẫn thư mục gốc
+</script>
+<script src="${pageContext.request.contextPath}/assets/js/cart.js">
 </script>
 
 </body>

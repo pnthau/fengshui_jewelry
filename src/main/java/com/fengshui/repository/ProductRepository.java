@@ -89,7 +89,7 @@ public class ProductRepository extends BaseRepository implements IProductReposit
             preparedStatement.setString(5, product.getImageURL());
             preparedStatement.setString(6, product.getYoutubeURL());
             preparedStatement.setString(7, product.getStatus());
-            preparedStatement.setString(8, product.getDescription());
+            preparedStatement.setString(8, product.getDescription());   
 
             rowsInserted = preparedStatement.executeUpdate();
             if (rowsInserted > 0) {
