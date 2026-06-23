@@ -15,4 +15,6 @@ public class OrderItem {
     private int productId;
     private int quantity;
     private BigDecimal priceAtPurchase;
+
+    private String productName;
 }
