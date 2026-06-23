@@ -5,6 +5,7 @@ import com.fengshui.entity.Order;
 import com.fengshui.entity.OrderItem;
 import com.fengshui.entity.Product;
 import com.fengshui.repository.*;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -26,7 +27,7 @@ public class OrderService implements IOrderService {
         this.orderRepository = orderRepo;
         this.orderItemRepository = orderItemRepo;
         this.productRepository = prodRepo;
-        this.transactionRepository = new InventoryTransactionRepository(); // Tạm để nguyên
+        // this.transactionRepository = new InventoryTransactionRepository(); // Tạm để nguyên
     }
 
     @Override
@@ -99,12 +100,13 @@ public class OrderService implements IOrderService {
 
         }
         return this.placeOrder(order, orderItems);
+    }
 
     @Override
     public List<OrderItem> findItemsByOrderID(int orderId) {
         return orderItemRepository.findByOrderID(orderId);
     }
-      
+
     @Override
     public boolean delete(int id) {
         return orderRepository.delete(id);
