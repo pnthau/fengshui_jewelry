@@ -1,5 +1,6 @@
 package com.fengshui.controller.user;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fengshui.entity.Cart;
 import com.fengshui.entity.CartItem;
 import com.fengshui.entity.Product;
@@ -12,7 +13,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @WebServlet(name = "CartController", value = "/cart/*")
@@ -23,7 +26,45 @@ public class CartController extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
         resp.setCharacterEncoding("UTF-8");
-        req.getRequestDispatcher("/WEB-INF/views/user/product_list.jsp").forward(req, resp);
+
+        String action = req.getPathInfo();
+        if (action == null) {
+            action = "";
+        }
+        switch (action) {
+            case "/data":
+                HttpSession session = req.getSession();
+                Cart cart = (Cart) session.getAttribute("cart");
+                if (cart == null) {
+                    cart = new Cart();
+                    session.setAttribute("cart", cart);
+                }
+
+                List<Map<String, Object>> cartList = getList(cart);
+
+                resp.setContentType("application/json");
+                ObjectMapper mapper = new ObjectMapper();
+                resp.getWriter().print(mapper.writeValueAsString(cartList));
+                break;
+            default:
+                resp.sendRedirect(req.getContextPath() + "/product_list.jsp");
+        }
+    }
+
+    private static List<Map<String, Object>> getList(Cart cart) {
+        List<Map<String, Object>> cartList = new ArrayList<>();
+        Map<String, Object> map = null;
+        for (CartItem item : cart.getItems().values()) {
+            map = new HashMap<>();
+            map.put("id", item.getProduct().getId());
+            map.put("name", item.getProduct().getName());
+            map.put("price", item.getProduct().getPrice());
+            map.put("image", item.getProduct().getImageURL());
+            map.put("quantity", item.getQuantity());
+            map.put("stock", item.getProduct().getQuantity());
+            cartList.add(map);
+        }
+        return cartList;
     }
 
     @Override
@@ -67,14 +108,11 @@ public class CartController extends HttpServlet {
         HttpSession session = req.getSession();
 
         Cart cart = (Cart) session.getAttribute("cart");
-        if (cart == null) {
-            cart = new Cart();
-            session.setAttribute("cart", cart);
-        }
-
-        Product product = productService.findByID(productId);
-        if (product != null) {
-            cart.addItem(product, quantity);
+        if (cart != null) {
+            Product product = productService.findByID(productId);
+            if (product != null) {
+                cart.addItem(product, quantity);
+            }
         }
     }
 

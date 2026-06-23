@@ -1,5 +1,19 @@
 // --- CART LOGIC (LocalStorage) ---
+const CONTEXT_PATH = document.querySelector('meta[name="context-path"]').getAttribute('content');
+
 let cart = [];
+
+async function syncCartWithServer() {
+    try {
+        const url = CONTEXT_PATH + '/cart/data';
+        const res = await fetch(url);
+
+        cart = await res.json();
+        updateCartBadge();
+    } catch (err) {
+        console.error("Lỗi đồng bộ giỏ hàng:", err);
+    }
+}
 
 function updateCartBadge() {
     const totalQty = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -18,9 +32,7 @@ async function addToCart(event, id, name, price, image) {
     params.append('productId', id);
     params.append('quantity', 1);
     const resp = await fetch(url, {
-        method: 'post',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: params.toString()
+        method: 'post', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: params.toString()
     });
 
     // Gọi hiệu ứng bay bay
@@ -133,9 +145,7 @@ async function removeFromCart(index) {
     params.append('productId', id);
 
     const res = await fetch(url, {
-        method: 'post',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: params.toString()
+        method: 'post', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: params.toString()
     })
 
     updateCartBadge();
@@ -156,9 +166,7 @@ async function changeQuantity(index, delta) {
         params.append('productId', id);
         params.append('quantity', cart[index].quantity);
         const res = await fetch(url, {
-            method: 'post',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: params.toString()
+            method: 'post', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: params.toString()
         });
 
         updateCartBadge();
@@ -192,9 +200,7 @@ async function saveCustomQuantity(index) {
         params.append('productId', id);
         params.append('quantity', cart[index].quantity);
         const res = await fetch(url, {
-            method: 'post',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: params.toString()
+            method: 'post', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: params.toString()
         });
 
         updateCartBadge();
@@ -224,9 +230,7 @@ async function checkoutCart() {
     params.append('customerAddress', addr);
 
     const res = await fetch(url, {
-        method: 'post',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: params.toString()
+        method: 'post', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: params.toString()
     });
 
     if (res.ok) {
@@ -343,7 +347,7 @@ function initMagicCursor() {
 
 // Khởi tạo
 document.addEventListener('DOMContentLoaded', () => {
-    updateCartBadge();
+    syncCartWithServer();
     initRandomTwitch();
     initMagicCursor();
 });
