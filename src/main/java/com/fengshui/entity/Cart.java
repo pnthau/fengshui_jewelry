@@ -31,6 +31,12 @@ public class Cart {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    public int getTotalQuantity() {
+        return items.values().stream()
+                .mapToInt(CartItem::getQuantity)
+                .sum();
+    }
+
     public void changeQuantityItem(int productId, int quantity) {
         items.get(productId).setQuantity(quantity);
     }

@@ -7,6 +7,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="context-path" content="${pageContext.request.contextPath}">
     <title>Danh Sách Trang Sức Phong Thủy</title>
     <!-- Bootstrap 5 CSS -->
     <link href="${pageContext.request.contextPath}/assets/css/bootstrap.min.css" rel="stylesheet">
@@ -335,7 +336,7 @@
 <div class="floating-cart-btn" onclick="openCartModal()" data-bs-toggle="tooltip" data-bs-placement="left"
      title="Giỏ Hàng Của Bạn">
     <i class="bi bi-cart3"></i>
-    <span class="cart-badge" id="cartBadgeCount">0</span>
+    <span class="cart-badge" id="cartBadgeCount">${sessionScope.cart != null ? sessionScope.cart.totalQuantity : 0}</span>
 </div>
 
 <!-- CART MODAL -->
@@ -659,7 +660,6 @@
     });
 
     // Khai báo biến toàn cục để file cart.js có thể lấy được đường dẫn thư mục gốc
-    const CONTEXT_PATH = '${pageContext.request.contextPath}';
 </script>
 <script src="${pageContext.request.contextPath}/assets/js/cart.js">
 </script>

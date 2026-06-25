@@ -1,11 +1,13 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Quản lý đơn hàng</title>
+  <title>Quản lý đơn hàng - Phong Thủy Hậu</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 <body class="bg-light mt-4">
 <div class="container">
@@ -50,7 +52,7 @@
           <table class="table table-hover">
             <thead class="table-light">
             <tr>
-              <th>ID Sản phẩm</th>
+              <th>Tên sản phẩm</th>
               <th>Số lượng</th>
               <th>Giá mua</th>
             </tr>
@@ -58,16 +60,26 @@
             <tbody>
             <c:forEach var="item" items="${items}">
               <tr>
-                <td>${item.productId}</td>
+                <!-- Thay vì hiển thị mã ID sản phẩm khô khan, giờ đây chúng ta hiển thị tên sản phẩm cực kỳ trực quan -->
+                <td class="fw-bold text-dark">
+                  <c:choose>
+                    <c:when test="${not empty item.productName}">
+                      ${item.productName}
+                    </c:when>
+                    <c:otherwise>
+                      <span class="text-muted">Sản phẩm #${item.productId} (Đã bị xóa hoặc không tìm thấy)</span>
+                    </c:otherwise>
+                  </c:choose>
+                </td>
                 <td>${item.quantity}</td>
-                <td>${item.priceAtPurchase} VNĐ</td>
+                <td><fmt:formatNumber value="${item.priceAtPurchase}" type="number" maxFractionDigits="0"/> VNĐ</td>
               </tr>
             </c:forEach>
             </tbody>
           </table>
 
           <div class="d-flex justify-content-end mt-3">
-            <h4>Tổng tiền: <span class="text-danger">${order.totalPrice} VNĐ</span></h4>
+            <h4>Tổng tiền: <span class="text-danger"><fmt:formatNumber value="${order.totalPrice}" type="number" maxFractionDigits="0"/> VNĐ</span></h4>
           </div>
         </div>
       </div>
@@ -75,7 +87,12 @@
 
     <%-- Giao diện danh sách đơn hàng --%>
     <c:otherwise>
-      <h2>Danh sách đơn hàng</h2>
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Danh sách đơn hàng</h2>
+        <a href="${pageContext.request.contextPath}/admin/products?action=list" class="btn btn-outline-primary">
+          <i class="bi bi-box-seam me-1"></i> Quản lý sản phẩm
+        </a>
+      </div>
       <table class="table table-bordered table-hover shadow-sm bg-white">
         <thead class="table-dark">
         <tr>
@@ -95,10 +112,16 @@
             <td>${o.customerName}</td>
             <td>${o.customerPhone}</td>
             <td>${o.customerAddress}</td>
-            <td>${o.totalPrice}</td>
-            <td>${o.status}</td>
+            <td><fmt:formatNumber value="${o.totalPrice}" type="number" maxFractionDigits="0"/> VNĐ</td>
             <td>
-              <a href="${pageContext.request.contextPath}/admin/orders?action=details&id=${o.id}" class="btn btn-info btn-sm">Chi tiết</a>
+              <span class="badge ${o.status == 'Đã giao' ? 'bg-success' : o.status == 'Đang giao' ? 'bg-info' : o.status == 'Đã hủy' ? 'bg-danger' : 'bg-warning'}">
+                  ${o.status}
+              </span>
+            </td>
+            <td>
+              <a href="${pageContext.request.contextPath}/admin/orders?action=details&id=${o.id}" class="btn btn-info btn-sm">
+                <i class="bi bi-eye-fill me-1"></i> Chi tiết
+              </a>
             </td>
           </tr>
         </c:forEach>

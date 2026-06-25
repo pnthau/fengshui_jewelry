@@ -16,3 +16,7 @@ target/
 # Local configuration files
 local.properties
 .DS_Store
+
+# AI support
+.agents
+.antigravity

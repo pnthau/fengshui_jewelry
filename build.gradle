@@ -42,12 +42,17 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:5.5.0'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.5.0'
 
-
+    // Jackson from Object to JSON
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
 }
 
 
 test {
     useJUnitPlatform()
+    // Fix: Chạy tất cả test trong CÙNG 1 JVM để tránh Byte Buddy agent
+    // của Mockito làm hỏng classpath ở JVM fork thứ 2
+    maxParallelForks = 1
+    forkEvery = 0
     testLogging {
         events "passed", "skipped", "failed"
     }
