@@ -9,6 +9,7 @@ public interface IOrderRepository {
     Order findByID(int id);
     boolean save(Order order);
     boolean updateStatus(int id, String status);
+    boolean updateStatus(Connection connection, int id, String status);
     boolean delete(int id);
     
     // Phương thức transactional dùng chung Connection

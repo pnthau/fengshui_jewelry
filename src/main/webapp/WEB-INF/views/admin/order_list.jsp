@@ -15,6 +15,14 @@
   <c:choose>
     <%-- Giao diện chi tiết đơn hàng --%>
     <c:when test="${not empty order}">
+      <c:if test="${not empty error}">
+        <div class="alert alert-danger alert-dismissible fade show border-danger shadow-sm mb-4" role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+          <strong>⚠️ CẢNH BÁO:</strong> ${error}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      </c:if>
+
       <div class="card shadow">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
           <h4 class="mb-0">Chi tiết đơn hàng #${order.id}</h4>
