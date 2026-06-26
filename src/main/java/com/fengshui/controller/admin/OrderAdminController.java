@@ -137,7 +137,7 @@ public class OrderAdminController extends HttpServlet {
 
             request.setAttribute("order", order);
             request.setAttribute("items", items);
-            request.setAttribute("error", errorMessage); // Đưa thông điệp lỗi tiếng Anh vào request attribute
+            request.setAttribute("error", errorMessage); 
 
             request.getRequestDispatcher("/WEB-INF/views/admin/order_list.jsp").forward(request, response);
         }

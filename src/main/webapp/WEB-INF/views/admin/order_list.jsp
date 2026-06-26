@@ -16,10 +16,16 @@
     <%-- Giao diện chi tiết đơn hàng --%>
     <c:when test="${not empty order}">
       <c:if test="${not empty error}">
-        <div class="alert alert-danger alert-dismissible fade show border-danger shadow-sm mb-4" role="alert">
-          <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
-          <strong>⚠️ CẢNH BÁO:</strong> ${error}
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <i class="bi bi-exclamation-triangle-fill"></i> <strong>Lỗi:</strong> ${error}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      </c:if>
+
+      <c:if test="${param.success == 1}">
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          <i class="bi bi-check-circle-fill"></i> Cập nhật trạng thái thành công!
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
       </c:if>
 
