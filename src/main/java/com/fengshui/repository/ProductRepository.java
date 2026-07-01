@@ -154,26 +154,6 @@ public class ProductRepository extends BaseRepository implements IProductReposit
         return rowsDeleted > 0;
     }
 
-
-//    @Override
-//    public boolean reduceStock(Connection connection, int productId, int quantity) {
-//        String sql = "UPDATE products SET quantity = quantity - ? WHERE id = ? AND quantity >= ?";
-//        int rowsUpdated = 0;
-//        // KHÔNG dùng try-with-resources cho connection ở đây vì nó do Service quản lý và đóng sau!
-//        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-//            preparedStatement.setInt(1, quantity);
-//            preparedStatement.setInt(2, productId);
-//            preparedStatement.setInt(3, quantity);
-//
-//            rowsUpdated = preparedStatement.executeUpdate();
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//        return rowsUpdated > 0;
-//    }
-
-
-
     @Override
     public void deleteElements(Connection conn, int productId) throws SQLException {
         String sql = "DELETE FROM product_elements WHERE product_id = ?";
@@ -234,6 +214,20 @@ public class ProductRepository extends BaseRepository implements IProductReposit
         return rowsUpdated > 0;
 
     }
+    @Override
+    public boolean increaseStock(Connection connection, int productId, int quantity) {
+        String sql = "UPDATE products SET quantity = quantity + ? WHERE id = ?";
+        int rowsUpdated = 0;
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setInt(1, quantity);
+            preparedStatement.setInt(2, productId);
+            rowsUpdated = preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return rowsUpdated > 0;
+    }
+
     @Override
     public boolean save(Connection conn, Product product) throws SQLException {
 
