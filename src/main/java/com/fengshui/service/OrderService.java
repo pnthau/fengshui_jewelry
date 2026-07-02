@@ -42,7 +42,59 @@ public class OrderService implements IOrderService {
 
     @Override
     public boolean updateStatus(int id, String status) {
-        return orderRepository.updateStatus(id, status);
+        Order oldOrder = orderRepository.findByID(id);
+        if (oldOrder == null) return false;
+
+        if (oldOrder.getStatus().equals(status)) {
+            return true;
+        }
+
+        List<OrderItem> items = orderItemRepository.findByOrderID(id);
+        boolean isSuccess = false;
+
+        try (Connection connection = ((BaseRepository) orderRepository).getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                // 1. Cập nhật trạng thái mới của đơn hàng
+                if (!orderRepository.updateStatus(connection, id, status)) {
+                    throw new SQLException("Failed to update status for order #" + id);
+                }
+                // TRƯỜNG HỢP 1: Đơn đang hoạt động (đã trừ kho) nay bị HỦY -> Tiến hành HOÀN KHO
+                if (isDeductedStatus(oldOrder.getStatus()) && "Đã hủy".equals(status)) {
+                    for (OrderItem item : items) {
+                        boolean stockRestored = productRepository.increaseStock(connection, item.getProductId(), item.getQuantity());
+                        if (!stockRestored) {
+                            throw new SQLException("Failed to restore stock for product ID #" + item.getProductId());
+                        }
+                    }
+                }
+                // TRƯỜNG HỢP 2 (QUAN TRỌNG): Đơn từ trạng thái HỦY quay lại trạng thái HOẠT ĐỘNG -> Bắt buộc phải KIỂM KHO & TÁI TRỪ KHO
+                else if ("Đã hủy".equals(oldOrder.getStatus()) && isDeductedStatus(status)) {
+                    for (OrderItem item : items) {
+                        // Thử trừ kho, nếu hàm trả về false tức là hàng đã hết hoặc không đủ cung cấp
+                        boolean stockReduced = productRepository.reduceStock(connection, item.getProductId(), item.getQuantity());
+                        if (!stockReduced) {
+                            Product p = productRepository.findByID(item.getProductId());
+                            String productName = (p != null) ? p.getName() : "#" + item.getProductId();
+                            int currentStock = (p != null) ? p.getQuantity() : 0;
+
+                            // Ném lỗi chặn đứng hành động duyệt đơn, kích hoạt Rollback tự động
+                            throw new SQLException("Product '" + productName + "' is out of stock (Available: "
+                                    + currentStock + ", Required: " + item.getQuantity() + "). Cannot reactivate this cancelled order!");
+                        }
+                    }
+                }
+
+                connection.commit();
+                isSuccess = true;
+            } catch (SQLException innerEx) {
+                connection.rollback();
+                throw new RuntimeException(innerEx.getMessage());
+            }
+        } catch (SQLException outerEx) {
+            outerEx.printStackTrace();
+        }
+        return isSuccess;
     }
 
     @Override
@@ -110,5 +162,15 @@ public class OrderService implements IOrderService {
     @Override
     public boolean delete(int id) {
         return orderRepository.delete(id);
+    }
+    private boolean isPendingStatus(String status) {
+        return "Chờ xử lý".equals(status) || "PENDING".equalsIgnoreCase(status);
+    }
+
+    private boolean isDeliveryStatus(String status) {
+        return "Đang giao".equals(status) || "Đã giao".equals(status) || "DELIVERED".equalsIgnoreCase(status) || "SHIPPED".equalsIgnoreCase(status);
+    }
+    private boolean isDeductedStatus(String status) {
+        return isPendingStatus(status) || isDeliveryStatus(status);
     }
 }

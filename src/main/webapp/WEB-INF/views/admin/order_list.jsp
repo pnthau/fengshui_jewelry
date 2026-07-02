@@ -15,6 +15,20 @@
   <c:choose>
     <%-- Giao diện chi tiết đơn hàng --%>
     <c:when test="${not empty order}">
+      <c:if test="${not empty error}">
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <i class="bi bi-exclamation-triangle-fill"></i> <strong>Lỗi:</strong> ${error}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      </c:if>
+
+      <c:if test="${param.success == 1}">
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          <i class="bi bi-check-circle-fill"></i> Cập nhật trạng thái thành công!
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      </c:if>
+
       <div class="card shadow">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
           <h4 class="mb-0">Chi tiết đơn hàng #${order.id}</h4>
