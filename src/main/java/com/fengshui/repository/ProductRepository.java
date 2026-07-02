@@ -16,6 +16,11 @@ public class ProductRepository extends BaseRepository implements IProductReposit
     private static final String INSERT_PRODUCT = "INSERT INTO products (name, price, quantity, material, image_url, youtube_url, status, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String UPDATE_PRODUCT = "UPDATE products SET name = ?, price = ?, quantity = ?, material = ?, image_url = ?, youtube_url = ?, status = ?, description = ? WHERE id = ?";
     private static final String DELETE_PRODUCT = "DELETE FROM products WHERE id = ?";
+    private static final String DELETE_ELEMENTS = "DELETE FROM product_elements WHERE product_id = ?";
+    private static final String INSERT_ELEMENT = "INSERT INTO product_elements (product_id, element) VALUES (?, ?)";
+    private static final String SELECT_ELEMENTS_BY_PRODUCT_ID = "SELECT element FROM product_elements WHERE product_id = ?";
+    private static final String UPDATE_STOCK_REDUCE = "UPDATE products SET quantity = quantity - ? WHERE id = ? AND quantity >= ?";
+    private static final String UPDATE_STOCK_INCREASE = "UPDATE products SET quantity = quantity + ? WHERE id = ?";
 
     @Override
     public List<Product> findAll() {
@@ -102,9 +107,8 @@ public class ProductRepository extends BaseRepository implements IProductReposit
     }
 
     private Set<String> getAllElementByProduct(Connection connection, int productID) {
-        String sql = "select pe.element from product_elements pe where pe.product_id = ?";
         Set<String> elements = new HashSet<>();
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(SELECT_ELEMENTS_BY_PRODUCT_ID)) {
             preparedStatement.setInt(1, productID);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 while (resultSet.next()) {
@@ -156,8 +160,7 @@ public class ProductRepository extends BaseRepository implements IProductReposit
 
     @Override
     public void deleteElements(Connection conn, int productId) throws SQLException {
-        String sql = "DELETE FROM product_elements WHERE product_id = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(DELETE_ELEMENTS)) {
             ps.setInt(1, productId);
             ps.executeUpdate();
         }
@@ -166,7 +169,7 @@ public class ProductRepository extends BaseRepository implements IProductReposit
     @Override
     public void addElements(Connection conn, int productId, String element) throws SQLException {
         String sql = "INSERT INTO product_elements (product_id, element) VALUES (?, ?)";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (PreparedStatement ps = conn.prepareStatement(INSERT_ELEMENT)) {
             ps.setInt(1, productId);
             ps.setString(2, element);
             ps.executeUpdate();
@@ -200,9 +203,8 @@ public class ProductRepository extends BaseRepository implements IProductReposit
 
     @Override
     public boolean reduceStock(Connection connection, int productId, int quantity) {
-        String sql = "UPDATE products SET quantity = quantity - ? WHERE id = ? AND quantity >= ?";
         int rowsUpdated = 0;
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_STOCK_REDUCE)) {
             preparedStatement.setInt(1, quantity);
             preparedStatement.setInt(2, productId);
             preparedStatement.setInt(3, quantity);
@@ -216,9 +218,8 @@ public class ProductRepository extends BaseRepository implements IProductReposit
     }
     @Override
     public boolean increaseStock(Connection connection, int productId, int quantity) {
-        String sql = "UPDATE products SET quantity = quantity + ? WHERE id = ?";
         int rowsUpdated = 0;
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_STOCK_INCREASE)) {
             preparedStatement.setInt(1, quantity);
             preparedStatement.setInt(2, productId);
             rowsUpdated = preparedStatement.executeUpdate();

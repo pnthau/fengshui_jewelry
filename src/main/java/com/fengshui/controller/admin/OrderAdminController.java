@@ -128,16 +128,8 @@ public class OrderAdminController extends HttpServlet {
         } catch (NumberFormatException e) {
             response.sendRedirect(request.getContextPath() + "/admin/orders?action=" + ACTION_LIST);
         } catch (RuntimeException e) {
-            String errorMessage = e.getMessage();
-
-            // Do idParam đã vượt qua vòng lọc NumberFormatException ở trên nên việc ép kiểu lại ở đây là an toàn tuyệt đối 100%
-            int id = Integer.parseInt(idParam);
-            Order order = orderService.findByID(id);
-            List<OrderItem> items = orderService.findItemsByOrderID(id);
-
-            request.setAttribute("order", order);
-            request.setAttribute("items", items);
-            request.setAttribute("error", errorMessage); 
+            request.setAttribute("error", e.getMessage());
+            request.setAttribute("orderId", idParam);
 
             request.getRequestDispatcher("/WEB-INF/views/admin/order_list.jsp").forward(request, response);
         }

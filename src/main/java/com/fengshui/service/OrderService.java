@@ -45,9 +45,8 @@ public class OrderService implements IOrderService {
         Order oldOrder = orderRepository.findByID(id);
         if (oldOrder == null) return false;
 
-        String oldStatus = oldOrder.getStatus();
-        if (oldStatus.equals(status)) {
-            return orderRepository.updateStatus(id, status);
+        if (oldOrder.getStatus().equals(status)) {
+            return true;
         }
 
         List<OrderItem> items = orderItemRepository.findByOrderID(id);
@@ -61,7 +60,7 @@ public class OrderService implements IOrderService {
                     throw new SQLException("Failed to update status for order #" + id);
                 }
                 // TRƯỜNG HỢP 1: Đơn đang hoạt động (đã trừ kho) nay bị HỦY -> Tiến hành HOÀN KHO
-                if (isDeductedStatus(oldStatus) && "Đã hủy".equals(status)) {
+                if (isDeductedStatus(oldOrder.getStatus()) && "Đã hủy".equals(status)) {
                     for (OrderItem item : items) {
                         boolean stockRestored = productRepository.increaseStock(connection, item.getProductId(), item.getQuantity());
                         if (!stockRestored) {
@@ -70,7 +69,7 @@ public class OrderService implements IOrderService {
                     }
                 }
                 // TRƯỜNG HỢP 2 (QUAN TRỌNG): Đơn từ trạng thái HỦY quay lại trạng thái HOẠT ĐỘNG -> Bắt buộc phải KIỂM KHO & TÁI TRỪ KHO
-                else if ("Đã hủy".equals(oldStatus) && isDeductedStatus(status)) {
+                else if ("Đã hủy".equals(oldOrder.getStatus()) && isDeductedStatus(status)) {
                     for (OrderItem item : items) {
                         // Thử trừ kho, nếu hàm trả về false tức là hàng đã hết hoặc không đủ cung cấp
                         boolean stockReduced = productRepository.reduceStock(connection, item.getProductId(), item.getQuantity());
