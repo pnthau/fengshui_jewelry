@@ -1,6 +1,8 @@
 package com.fengshui.controller.admin;
 
+import com.fengshui.entity.InventoryTransaction;
 import com.fengshui.entity.Product;
+import com.fengshui.service.InventoryTransactionService;
 import com.fengshui.service.ProductService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -17,6 +19,7 @@ import java.util.List;
 @WebServlet("/admin/products")
 public class ProductAdminController extends HttpServlet {
     private final ProductService productService = new ProductService();
+    private final InventoryTransactionService inventoryTransactionService = new InventoryTransactionService();
 
     // Khai báo các hằng số hành động rõ ràng (Tránh lỗi gõ sai chính tả - Anti-typo)
     private static final String ACTION_LIST = "list";
@@ -159,8 +162,49 @@ public class ProductAdminController extends HttpServlet {
         Product p = mapRequestToProduct(request);
 
         if (ACTION_ADD.equals(action)) {
-            productService.save(p);
+            // Bước 1: Khởi tạo sản phẩm mới với tồn kho bằng 0 để đảm bảo tính minh bạch
+            p.setQuantity(0);
+            p.setStatus("Còn hàng"); // Trạng thái mặc định hoặc dựa trên trigger
+
+            boolean productSaved = productService.save(p);
+
+            if (productSaved && p.getId() > 0) {
+                // Đọc thông tin nhập sỉ ban đầu nếu có từ Form (giá sỉ và số lượng sỉ)
+                String initialQtyStr = request.getParameter("initialQuantity");
+                String costPriceStr = request.getParameter("costPrice");
+
+                if (initialQtyStr != null && !initialQtyStr.trim().isEmpty() &&
+                        costPriceStr != null && !costPriceStr.trim().isEmpty()) {
+
+                    try {
+                        int initialQty = Integer.parseInt(initialQtyStr);
+                        BigDecimal costPrice = new BigDecimal(costPriceStr);
+
+                        if (initialQty > 0 && costPrice.compareTo(BigDecimal.ZERO) > 0) {
+                            // Bước 2: Tạo ngay một phiếu nhập kho ban đầu bọc trong Transaction để hợp thức hóa tồn kho sỉ
+                            InventoryTransaction tx = new InventoryTransaction();
+                            tx.setProductId(p.getId());
+                            tx.setTransactionType("IMPORT");
+                            tx.setQuantity(initialQty);
+                            tx.setPrice(costPrice);
+                            tx.setReason("Nhập hàng ban đầu khi đăng ký sản phẩm mới");
+                            tx.setCreatedBy(1); // Mặc định Admin ID tạm thời là 1
+
+                            inventoryTransactionService.executeStockTransaction(tx);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        // Ghi nhận lỗi nhập kho nhưng không làm gãy luồng tạo thông tin sản phẩm
+                    }
+                }
+            }
         } else if (ACTION_UPDATE.equals(action)) {
+            // Khóa cứng việc can thiệp trực tiếp số lượng và trạng thái tại Form chỉnh sửa
+            Product oldProduct = productService.findByID(p.getId());
+            if (oldProduct != null) {
+                p.setQuantity(oldProduct.getQuantity());
+                p.setStatus(oldProduct.getStatus());
+            }
             productService.update(p);
         }
 
@@ -192,8 +236,7 @@ public class ProductAdminController extends HttpServlet {
         p.setPrice((priceStr != null && !priceStr.isEmpty()) ? new BigDecimal(priceStr) : BigDecimal.ZERO);
 
         // 4. Số lượng tồn kho (Xử lý an toàn)
-        String qtyStr = request.getParameter("quantity");
-        p.setQuantity((qtyStr != null && !qtyStr.isEmpty()) ? Integer.parseInt(qtyStr) : 0);
+        p.setQuantity(0);
 
         // 5. Chất liệu chế tác (Cung cấp giá trị mặc định nếu để trống)
         String material = request.getParameter("material");
