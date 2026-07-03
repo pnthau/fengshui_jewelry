@@ -62,13 +62,11 @@ public class OrderService implements IOrderService {
                     if (product == null || product.getQuantity() < item.getQuantity()) {
                         String productName = product != null ? product.getName() : "";
 
-                        throw new SQLException("Not enough stock for product : " + productName
-                                + " (Required: " + item.getQuantity() + ", Available: "
-                                + (product != null ? product.getQuantity() : 0) + ")");
+                        throw new SQLException("Số lượng mua vượt quá số lượng bán. " +
+                                "Kho hiện tại chỉ còn: " +
+                                (product != null ? product.getQuantity() : 0));
                     }
 
-                    // 2. save item (Database trigger trg_after_insert_order_items sẽ tự động trừ
-                    // kho)
                     boolean itemSaved = orderItemRepository.save(connection, item);
                     if (!itemSaved) {
                         throw new SQLException("Save() OrderItem failure");
@@ -77,13 +75,13 @@ public class OrderService implements IOrderService {
                 connection.commit();
                 isSuccess = true;
                 System.out.println("✅ Order succeed! COMMIT");
-            } catch (SQLException innerEx) {
+            } catch (SQLException customerEx) {
                 connection.rollback();
-                System.out.println("❌ Order failure! ROLLBACK " + innerEx.getMessage());
-                throw new RuntimeException(innerEx.getMessage());
+                System.out.println("❌ Order failure! ROLLBACK " + customerEx.getMessage());
+                throw new RuntimeException(customerEx.getMessage());
             }
-        } catch (SQLException outerEx) {
-            outerEx.printStackTrace();
+        } catch (SQLException serverEx) {
+            throw new RuntimeException("Lỗi kết nối Cơ sở dữ liệu: " + serverEx.getMessage());
         }
         return isSuccess;
     }
@@ -97,7 +95,6 @@ public class OrderService implements IOrderService {
             item.setQuantity(cartItem.getQuantity());
             item.setPriceAtPurchase(cartItem.getProduct().getPrice());
             orderItems.add(item);
-
         }
         return this.placeOrder(order, orderItems);
     }
