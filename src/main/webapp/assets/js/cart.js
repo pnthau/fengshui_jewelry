@@ -37,6 +37,9 @@ async function addToCart(event, id, name, price, image) {
 
     // Gọi hiệu ứng bay bay
     createFlyingEffect(event, image);
+
+    // Hiển thị bong bóng chốt đơn cho người già
+    showChotDonBubble();
 }
 
 function createFlyingEffect(event, imagePath) {
@@ -210,7 +213,7 @@ async function saveCustomQuantity(index) {
 
 async function checkoutCart() {
     if (cart.length === 0) {
-        alert('⚠️ Giỏ hàng của bạn đang trống!');
+        FengShuiToast.warning('Giỏ hàng của bạn đang trống!');
         return;
     }
 
@@ -219,7 +222,7 @@ async function checkoutCart() {
     const addr = document.getElementById('cartCustomerAddress').value.trim();
 
     if (!name || !phone || !addr) {
-        alert('Vui lòng điền đầy đủ thông tin (Họ tên, SĐT, Địa chỉ) để chúng tôi giao hàng!');
+        FengShuiToast.warning('Vui lòng điền đầy đủ thông tin (Họ tên, SĐT, Địa chỉ) để chúng tôi giao hàng!');
         return;
     }
 
@@ -228,20 +231,33 @@ async function checkoutCart() {
     params.append('customerName', name);
     params.append('customerPhone', phone);
     params.append('customerAddress', addr);
+    try {
+        const res = await fetch(url, {
+            method: 'post',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: params.toString()
+        });
 
-    const res = await fetch(url, {
-        method: 'post', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: params.toString()
-    });
+        if (res.ok) {
+            console.log("Đơn hàng Giỏ hàng:", {name, phone, address: addr, items: cart});
 
-    if (res.ok) {
-        console.log("Đơn hàng Giỏ hàng:", {name, phone, address: addr, items: cart});
+            FengShuiToast.success('Chúc mừng Ông/Bà ' + name + ' đã đặt hàng thành công! Nhân viên phong thủy sẽ gọi lại ngay để xác nhận.', 6000);        // Reset cart
+            cart = [];
+            updateCartBadge();
+            const cartModal = bootstrap.Modal.getInstance(document.getElementById('cartModal'));
+            if (cartModal) cartModal.hide();
+        } else {
+            const errorMessage = await res.text();
 
-        alert('🎉 Chúc mừng Ông/Bà ' + name + ' đã đặt hàng thành công! Nhân viên phong thủy sẽ gọi lại ngay để xác nhận.');
-        // Reset cart
-        cart = [];
-        updateCartBadge();
-        const cartModal = bootstrap.Modal.getInstance(document.getElementById('cartModal'));
-        if (cartModal) cartModal.hide();
+            if (errorMessage && errorMessage.trim() !== "") {
+                FengShuiToast.error(errorMessage);
+            } else {
+                FengShuiToast.error('Đặt hàng thất bại. Vui lòng thử lại!');
+            }
+        }
+    } catch (error) {
+        console.log("Lỗi order:", error);
+        FengShuiToast.error('Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại mạng Wi-Fi của bạn!');
     }
 }
 
@@ -351,3 +367,22 @@ document.addEventListener('DOMContentLoaded', () => {
     initRandomTwitch();
     initMagicCursor();
 });
+
+// Hàm hiển thị bong bóng "Chốt Đơn" bay lên
+function showChotDonBubble() {
+    const cartBtn = document.querySelector('.floating-cart-btn');
+    if (!cartBtn) return;
+
+    const bubble = document.createElement('div');
+    bubble.className = 'chot-don-bubble';
+    // Đổi thành hàng dọc, không có icon (Hình dáng quẻ xăm)
+    bubble.innerHTML = 'Đã<br>Chốt<br>Đơn';
+    
+    cartBtn.appendChild(bubble);
+
+    setTimeout(() => {
+        if (bubble.parentNode) {
+            bubble.parentNode.removeChild(bubble);
+        }
+    }, 2500); // Tăng thời gian hiển thị lên chút cho dễ đọc
+}

@@ -244,7 +244,7 @@ footer {
 .floating-cart-btn {
     position: fixed;
     top: 50%;
-    left: 20px;
+    left: 20px; /* Mặc định cho màn hình nhỏ */
     transform: translateY(-50%);
     background: linear-gradient(135deg, #f39c12, #e67e22);
     color: white;
@@ -258,9 +258,17 @@ footer {
     box-shadow: 0 4px 15px rgba(243, 156, 18, 0.5);
     cursor: pointer;
     z-index: 1000;
-    transition: transform 0.3s, box-shadow 0.3s;
+    transition: transform 0.3s, box-shadow 0.3s, left 0.3s ease-out;
     animation: bounceCart 2s infinite;
 }
+
+/* --- TỰ ĐỘNG CĂN GIỮA NÚT GIỎ HÀNG VÀO KHE TRỐNG BÊN TRÁI --- */
+@media (min-width: 576px) { .floating-cart-btn { left: max(20px, calc((100vw - 540px) / 4 - 32.5px)); } }
+@media (min-width: 768px) { .floating-cart-btn { left: max(20px, calc((100vw - 720px) / 4 - 32.5px)); } }
+@media (min-width: 992px) { .floating-cart-btn { left: max(20px, calc((100vw - 960px) / 4 - 32.5px)); } }
+@media (min-width: 1200px) { .floating-cart-btn { left: max(20px, calc((100vw - 1140px) / 4 - 32.5px)); } }
+@media (min-width: 1400px) { .floating-cart-btn { left: max(20px, calc((100vw - 1320px) / 4 - 32.5px)); } }
+
 .floating-cart-btn:hover {
     transform: translateY(-50%) scale(1.1);
     box-shadow: 0 6px 20px rgba(243, 156, 18, 0.7);
@@ -378,4 +386,200 @@ footer {
     background: rgba(255, 255, 255, 0.9);
     border: 2px solid #e67e22;
     backdrop-filter: none;
+}
+
+/* ==========================================
+   FENG SHUI PREMIUM GLASSMORPHIC TOAST SYSTEM
+   ========================================== */
+#fengshui-toast-container {
+    position: fixed;
+    top: 25px;
+    right: 25px;
+    z-index: 999999;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 420px;
+    width: calc(100% - 50px);
+    pointer-events: none;
+}
+
+.fs-toast {
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding: 20px 25px;
+    background: rgba(28, 31, 34, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-left: 8px solid var(--accent-gold);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 1.25rem;
+    pointer-events: auto;
+    overflow: hidden;
+    animation: toastSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+              toastFadeOut 0.4s ease forwards;
+    animation-delay: 0s, var(--toast-delay, 3.6s);
+    transition: all 0.3s ease;
+}
+
+.fs-toast:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 35px rgba(229, 192, 96, 0.25);
+}
+
+.fs-toast-icon {
+    font-size: 2rem;
+    margin-right: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fs-toast-content {
+    flex-grow: 1;
+    padding-right: 15px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.fs-toast-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.8rem;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+
+.fs-toast-close:hover {
+    color: var(--accent-gold);
+}
+
+/* Toast Progress Bar (co lại dần) */
+.fs-toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: var(--accent-gold);
+    width: 100%;
+    animation: toastProgress var(--toast-duration, 4000ms) linear forwards;
+}
+
+/* Các phân loại Toast */
+.fs-toast.success {
+    border-left-color: var(--accent-gold);
+}
+.fs-toast.success .fs-toast-icon {
+    color: var(--accent-gold);
+}
+.fs-toast.success .fs-toast-progress {
+    background: var(--accent-gold);
+}
+
+.fs-toast.error {
+    border-left-color: var(--accent-ruby);
+}
+.fs-toast.error .fs-toast-icon {
+    color: var(--accent-ruby);
+}
+.fs-toast.error .fs-toast-progress {
+    background: var(--accent-ruby);
+}
+
+.fs-toast.warning {
+    border-left-color: #f39c12;
+}
+.fs-toast.warning .fs-toast-icon {
+    color: #f39c12;
+}
+.fs-toast.warning .fs-toast-progress {
+    background: #f39c12;
+}
+
+.fs-toast.info {
+    border-left-color: var(--element-thuy);
+}
+.fs-toast.info .fs-toast-icon {
+    color: var(--element-thuy);
+}
+.fs-toast.info .fs-toast-progress {
+    background: var(--element-thuy);
+}
+
+/* Animations */
+@keyframes toastSlideIn {
+    from {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes toastFadeOut {
+    to {
+        transform: translateX(50px);
+        opacity: 0;
+    }
+}
+
+@keyframes toastProgress {
+    from {
+        width: 100%;
+    }
+    to {
+        width: 0%;
+    }
+}
+
+/* ==========================================
+   QUẺ XĂM "CHỐT ĐƠN" (PHONG THỦY)
+   ========================================== */
+.chot-don-bubble {
+    position: absolute;
+    bottom: 80%; /* Bắt đầu nổi lên từ phía trên giỏ hàng */
+    left: 50%;
+    transform: translateX(-50%);
+    
+    /* Hình dáng quẻ xăm gỗ/tre */
+    background: linear-gradient(to right, #d4a373, #faedcd, #d4a373);
+    color: #3e2723; /* Màu mực tàu đậm */
+    padding: 18px 12px;
+    width: auto;
+    min-width: 48px;
+    border-radius: 4px 4px 15px 15px; /* Bo tròn mượt ở đáy */
+    border-top: 12px solid #dc3545; /* Đầu quẻ xăm sơn son (màu đỏ) */
+    border-bottom: 2px solid #bc8a5f; /* Tạo độ nổi 3D ở đáy */
+    
+    font-size: 16px; 
+    font-weight: 900;
+    line-height: 1.3;
+    text-align: center;
+    word-wrap: break-word;
+    box-shadow: 3px 5px 15px rgba(0, 0, 0, 0.4);
+    pointer-events: none; 
+    z-index: 1001;
+    
+    /* Hiệu ứng rút quẻ xăm bay vút lên */
+    animation: rutQueXam 2.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes rutQueXam {
+    0% { bottom: 50%; opacity: 0; transform: translateX(-50%) translateY(40px) scale(0.5); }
+    15% { bottom: 110%; opacity: 1; transform: translateX(-50%) translateY(0) scale(1.1); }
+    25% { bottom: 100%; opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+    80% { bottom: 100%; opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+    100% { bottom: 150%; opacity: 0; transform: translateX(-50%) translateY(-30px) scale(0.8); }
 }
