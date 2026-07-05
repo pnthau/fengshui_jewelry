@@ -94,7 +94,9 @@ public class ProductAdminController extends HttpServlet {
             throws ServletException, IOException {
         List<Product> products = productService.findAll();
         request.setAttribute("products", products);
-        request.getRequestDispatcher("/WEB-INF/views/admin/product_list.jsp").forward(request, response);
+        request.setAttribute("title", "Quản lý sản phẩm");
+        request.setAttribute("contentPage", "/WEB-INF/views/admin/product_list.jsp");
+        request.getRequestDispatcher("/WEB-INF/views/admin/admin_layout.jsp").forward(request, response);
     }
 
     /**
@@ -102,7 +104,9 @@ public class ProductAdminController extends HttpServlet {
      */
     private void handleCreate(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.getRequestDispatcher("/WEB-INF/views/admin/product_form.jsp").forward(request, response);
+        request.setAttribute("title", "Thêm sản phẩm mới");
+        request.setAttribute("contentPage", "/WEB-INF/views/admin/product_form.jsp");
+        request.getRequestDispatcher("/WEB-INF/views/admin/admin_layout.jsp").forward(request, response);
     }
 
     /**
@@ -127,7 +131,9 @@ public class ProductAdminController extends HttpServlet {
 
             request.setAttribute("product", p);
             request.setAttribute("productElements", p.getElements());
-            request.getRequestDispatcher("/WEB-INF/views/admin/product_form.jsp").forward(request, response);
+            request.setAttribute("title", "Chỉnh sửa sản phẩm");
+            request.setAttribute("contentPage", "/WEB-INF/views/admin/product_form.jsp");
+            request.getRequestDispatcher("/WEB-INF/views/admin/admin_layout.jsp").forward(request, response);
         } catch (NumberFormatException e) {
             // Ngăn chặn lỗi sập luồng 500 khi ID truyền vào là chuỗi không hợp lệ
             response.sendRedirect(request.getContextPath() + "/admin/products?action=" + ACTION_LIST);
@@ -158,7 +164,7 @@ public class ProductAdminController extends HttpServlet {
      * Xử lý lưu (Thêm mới/Cập nhật) sản phẩm phong thủy (POST)
      */
     private void handleSaveProduct(HttpServletRequest request, HttpServletResponse response, String action)
-            throws IOException {
+            throws IOException, ServletException { // Thêm ServletException
         Product p = mapRequestToProduct(request);
 
         if (ACTION_ADD.equals(action)) {
@@ -166,7 +172,7 @@ public class ProductAdminController extends HttpServlet {
             p.setQuantity(0);
             p.setStatus("Còn hàng"); // Trạng thái mặc định hoặc dựa trên trigger
 
-            boolean productSaved = productService.save(p);
+            boolean productSaved = productService.saveWithElements(p); // Sử dụng saveWithElements
 
             if (productSaved && p.getId() > 0) {
                 // Đọc thông tin nhập sỉ ban đầu nếu có từ Form (giá sỉ và số lượng sỉ)
@@ -195,8 +201,23 @@ public class ProductAdminController extends HttpServlet {
                     } catch (Exception e) {
                         e.printStackTrace();
                         // Ghi nhận lỗi nhập kho nhưng không làm gãy luồng tạo thông tin sản phẩm
+                        request.setAttribute("error", "Lỗi khi tạo giao dịch nhập kho ban đầu: " + e.getMessage());
+                        request.setAttribute("product", p); // Giữ lại dữ liệu đã nhập
+                        request.setAttribute("productElements", p.getElements());
+                        request.setAttribute("title", "Thêm sản phẩm mới");
+                        request.setAttribute("contentPage", "/WEB-INF/views/admin/product_form.jsp");
+                        request.getRequestDispatcher("/WEB-INF/views/admin/admin_layout.jsp").forward(request, response);
+                        return;
                     }
                 }
+            } else {
+                request.setAttribute("error", "Lỗi khi lưu sản phẩm mới vào cơ sở dữ liệu.");
+                request.setAttribute("product", p); // Giữ lại dữ liệu đã nhập
+                request.setAttribute("productElements", p.getElements());
+                request.setAttribute("title", "Thêm sản phẩm mới");
+                request.setAttribute("contentPage", "/WEB-INF/views/admin/product_form.jsp");
+                request.getRequestDispatcher("/WEB-INF/views/admin/admin_layout.jsp").forward(request, response);
+                return;
             }
         } else if (ACTION_UPDATE.equals(action)) {
             // Khóa cứng việc can thiệp trực tiếp số lượng và trạng thái tại Form chỉnh sửa
@@ -205,7 +226,16 @@ public class ProductAdminController extends HttpServlet {
                 p.setQuantity(oldProduct.getQuantity());
                 p.setStatus(oldProduct.getStatus());
             }
-            productService.update(p);
+            boolean productUpdated = productService.updateWithElements(p); // Sử dụng updateWithElements
+            if (!productUpdated) {
+                request.setAttribute("error", "Lỗi khi cập nhật sản phẩm vào cơ sở dữ liệu.");
+                request.setAttribute("product", p); // Giữ lại dữ liệu đã nhập
+                request.setAttribute("productElements", p.getElements());
+                request.setAttribute("title", "Chỉnh sửa sản phẩm");
+                request.setAttribute("contentPage", "/WEB-INF/views/admin/product_form.jsp");
+                request.getRequestDispatcher("/WEB-INF/views/admin/admin_layout.jsp").forward(request, response);
+                return;
+            }
         }
 
         response.sendRedirect(request.getContextPath() + "/admin/products?action=" + ACTION_LIST);
@@ -236,6 +266,7 @@ public class ProductAdminController extends HttpServlet {
         p.setPrice((priceStr != null && !priceStr.isEmpty()) ? new BigDecimal(priceStr) : BigDecimal.ZERO);
 
         // 4. Số lượng tồn kho (Xử lý an toàn)
+        // Luôn đặt là 0 khi map từ request, logic quản lý số lượng sẽ nằm ở InventoryTransactionService
         p.setQuantity(0);
 
         // 5. Chất liệu chế tác (Cung cấp giá trị mặc định nếu để trống)

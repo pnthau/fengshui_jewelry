@@ -120,7 +120,9 @@ public class InventoryAdminController extends HttpServlet {
     private void handleList(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         loadInventoryData(request);
-        request.getRequestDispatcher("/WEB-INF/views/admin/inventory_list.jsp").forward(request, response);
+        request.setAttribute("title", "Nhật ký kho");
+        request.setAttribute("contentPage", "/WEB-INF/views/admin/inventory_list.jsp");
+        request.getRequestDispatcher("/WEB-INF/views/admin/admin_layout.jsp").forward(request, response);
     }
 
     /**
@@ -198,7 +200,8 @@ public class InventoryAdminController extends HttpServlet {
             throws ServletException, IOException {
         loadInventoryData(request);
         request.setAttribute("error", errorMsg); // Gửi thông điệp lỗi tiếng Anh về JSP
-
-        request.getRequestDispatcher("/WEB-INF/views/admin/inventory_list.jsp").forward(request, response);
+        request.setAttribute("title", "Nhật ký kho");
+        request.setAttribute("contentPage", "/WEB-INF/views/admin/inventory_list.jsp");
+        request.getRequestDispatcher("/WEB-INF/views/admin/admin_layout.jsp").forward(request, response);
     }
 }

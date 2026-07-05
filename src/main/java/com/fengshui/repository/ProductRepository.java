@@ -17,6 +17,10 @@ public class ProductRepository extends BaseRepository implements IProductReposit
     private static final String UPDATE_PRODUCT = "UPDATE products SET name = ?, price = ?, quantity = ?, material = ?, image_url = ?, youtube_url = ?, status = ?, description = ? WHERE id = ?";
     private static final String DELETE_PRODUCT = "DELETE FROM products WHERE id = ?";
 
+    // SQL for Dashboard
+    private static final String COUNT_PRODUCTS_BELOW_QUANTITY = "SELECT COUNT(*) FROM products WHERE quantity < ?";
+
+
     @Override
     public List<Product> findAll() {
         List<Product> products = new ArrayList<>();
@@ -238,7 +242,7 @@ public class ProductRepository extends BaseRepository implements IProductReposit
             stmt.setInt(3, product.getQuantity());
             stmt.setString(4, product.getMaterial());
             stmt.setString(5, product.getImageURL());
-            stmt.setString(6, product.getDescription());
+            stmt.setString(6, product.getYoutubeURL());
             stmt.setString(7, product.getStatus());
             stmt.setString(8, product.getDescription());
 
@@ -320,5 +324,23 @@ public class ProductRepository extends BaseRepository implements IProductReposit
             e.printStackTrace();
         }
         return false;
+    }
+
+    // New method for Dashboard
+    @Override
+    public int countProductsBelowQuantity(int quantity) {
+        int count = 0;
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(COUNT_PRODUCTS_BELOW_QUANTITY)) {
+            preparedStatement.setInt(1, quantity);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    count = resultSet.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return count;
     }
 }
