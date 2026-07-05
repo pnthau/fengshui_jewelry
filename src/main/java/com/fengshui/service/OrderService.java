@@ -4,6 +4,7 @@ import com.fengshui.entity.CartItem;
 import com.fengshui.entity.Order;
 import com.fengshui.entity.OrderItem;
 import com.fengshui.entity.Product;
+import com.fengshui.enums.OrderStatus;
 import com.fengshui.repository.*;
 
 import java.sql.Connection;
@@ -65,8 +66,8 @@ public class OrderService implements IOrderService {
 
             // Quy định: "CANCELLED" là trạng thái DUY NHẤT mà hàng hóa được trả lại kho.
             // Các trạng thái còn lại (PENDING, SHIPPING, SUCCESS) đều là trạng thái "Active" (Đã bị trừ kho lúc đặt hàng).
-            boolean isOldActive = !"CANCELLED".equals(oldStatus);
-            boolean isNewActive = !"CANCELLED".equals(newStatus);
+            boolean isOldActive = OrderStatus.CANCELLED.name().equals(oldStatus);
+            boolean isNewActive = OrderStatus.CANCELLED.name().equals(newStatus);
 
             if (isOldActive && !isNewActive) {
                 // Trường hợp 1: HỦY ĐƠN HÀNG -> Hoàn trả lại kho
@@ -176,6 +177,7 @@ public class OrderService implements IOrderService {
     public List<OrderItem> findItemsByOrderID(int orderId) {
         return orderItemRepository.findByOrderID(orderId);
     }
+
 
     @Override
     public boolean delete(int id) {

@@ -16,6 +16,8 @@ public class ProductRepository extends BaseRepository implements IProductReposit
     private static final String INSERT_PRODUCT = "INSERT INTO products (name, price, quantity, material, image_url, youtube_url, status, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String UPDATE_PRODUCT = "UPDATE products SET name = ?, price = ?, quantity = ?, material = ?, image_url = ?, youtube_url = ?, status = ?, description = ? WHERE id = ?";
     private static final String DELETE_PRODUCT = "DELETE FROM products WHERE id = ?";
+    private static final String UPDATE_STOCK_REDUCE = "UPDATE products SET quantity = quantity - ? WHERE id = ? AND quantity >= ?";
+    private static final String UPDATE_STOCK_INCREASE = "UPDATE products SET quantity = quantity + ? WHERE id = ?";
 
     // SQL for Dashboard
     private static final String COUNT_PRODUCTS_BELOW_QUANTITY = "SELECT COUNT(*) FROM products WHERE quantity < ?";
@@ -204,9 +206,8 @@ public class ProductRepository extends BaseRepository implements IProductReposit
 
     @Override
     public boolean reduceStock(Connection connection, int productId, int quantity) {
-        String sql = "UPDATE products SET quantity = quantity - ? WHERE id = ? AND quantity >= ?";
         int rowsUpdated = 0;
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_STOCK_REDUCE)) {
             preparedStatement.setInt(1, quantity);
             preparedStatement.setInt(2, productId);
             preparedStatement.setInt(3, quantity);
@@ -220,9 +221,8 @@ public class ProductRepository extends BaseRepository implements IProductReposit
     }
     @Override
     public boolean increaseStock(Connection connection, int productId, int quantity) {
-        String sql = "UPDATE products SET quantity = quantity + ? WHERE id = ?";
         int rowsUpdated = 0;
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_STOCK_INCREASE)) {
             preparedStatement.setInt(1, quantity);
             preparedStatement.setInt(2, productId);
             rowsUpdated = preparedStatement.executeUpdate();

@@ -2,6 +2,7 @@ package com.fengshui.controller.admin;
 
 import com.fengshui.entity.Order;
 import com.fengshui.entity.OrderItem;
+import com.fengshui.enums.OrderStatus;
 import com.fengshui.service.IOrderService;
 import com.fengshui.service.OrderService;
 import jakarta.servlet.ServletException;
@@ -9,6 +10,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -127,15 +129,16 @@ public class OrderAdminController extends HttpServlet {
             return;
         }
         try {
+            OrderStatus enumStatus = OrderStatus.fromString(status);
+
             int id = Integer.parseInt(idParam);
-            orderService.updateStatus(id, status);
+            orderService.updateStatus(id, enumStatus.name());
             response.sendRedirect(request.getContextPath() + "/admin/orders?action=details&id=" + id + "&success=1");
         } catch (NumberFormatException e) {
             response.sendRedirect(request.getContextPath() + "/admin/orders?action=" + ACTION_LIST);
         } catch (RuntimeException e) {
             String errorMessage = e.getMessage();
 
-            // Do idParam đã vượt qua vòng lọc NumberFormatException ở trên nên việc ép kiểu lại ở đây là an toàn tuyệt đối 100%
             int id = Integer.parseInt(idParam);
             Order order = orderService.findByID(id);
             List<OrderItem> items = orderService.findItemsByOrderID(id);
