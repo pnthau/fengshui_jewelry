@@ -56,5 +56,44 @@ public class InventoryTransactionService implements IInventoryTransactionService
         }
         return isSuccess;
     }
-}
 
+    public boolean voidTransaction(int transactionId) {
+        InventoryTransactionRepository repo = (InventoryTransactionRepository) transactionRepository;
+        InventoryTransaction tx = repo.findById(transactionId);
+        
+        if (tx == null || "VOIDED".equals(tx.getStatus())) {
+            throw new RuntimeException("Giao dịch không tồn tại hoặc đã bị hủy trước đó!");
+        }
+
+        try (Connection conn = ((BaseRepository) productRepository).getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // 1. Cập nhật trạng thái phiếu thành VOIDED
+                repo.updateStatus(conn, transactionId, "VOIDED");
+
+                // 2. Hoàn tác số lượng tồn kho
+                Product product = productRepository.findByID(tx.getProductId());
+                if ("IMPORT".equals(tx.getTransactionType())) {
+                    // Nếu hủy phiếu NHẬP -> Phải TRỪ kho
+                    if (product.getQuantity() < tx.getQuantity()) {
+                        throw new SQLException("Không thể hủy vì lượng hàng tồn kho hiện tại không đủ để trừ lại!");
+                    }
+                    product.setQuantity(product.getQuantity() - tx.getQuantity());
+                } else {
+                    // Nếu hủy phiếu XUẤT -> Phải CỘNG lại kho
+                    product.setQuantity(product.getQuantity() + tx.getQuantity());
+                }
+
+                productRepository.updateInTransaction(conn, product);
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw new RuntimeException("Lỗi khi hoàn tác kho: " + e.getMessage());
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+}

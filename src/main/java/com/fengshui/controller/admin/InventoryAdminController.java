@@ -6,15 +6,16 @@ import com.fengshui.DTO.InventoryTransactionDTO;
 import com.fengshui.service.InventoryTransactionService;
 import com.fengshui.service.ProductService;
 import com.fengshui.service.IProductService;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.util.List;
+import java.time.format.DateTimeFormatter;
 
 @WebServlet("/admin/inventory")
 public class InventoryAdminController extends HttpServlet {
@@ -23,6 +24,8 @@ public class InventoryAdminController extends HttpServlet {
 
     private static final String ACTION_LIST = "list";
     private static final String ACTION_SUBMIT = "submit";
+    private static final String ACTION_VOID = "void";
+    private static final String ACTION_EXPORT = "export";
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -39,6 +42,9 @@ public class InventoryAdminController extends HttpServlet {
         switch (action) {
             case ACTION_LIST:
                 handleList(request, response);
+                break;
+            case ACTION_EXPORT:
+                handleExportCSV(request, response);
                 break;
             default:
                 response.sendRedirect(request.getContextPath() + "/admin/inventory?action=" + ACTION_LIST);
@@ -62,9 +68,49 @@ public class InventoryAdminController extends HttpServlet {
             case ACTION_SUBMIT:
                 handleSubmitTransaction(request, response);
                 break;
+            case ACTION_VOID:
+                handleVoidTransaction(request, response);
+                break;
             default:
                 response.sendRedirect(request.getContextPath() + "/admin/inventory?action=" + ACTION_LIST);
                 break;
+        }
+    }
+
+    private void handleVoidTransaction(HttpServletRequest request, HttpServletResponse response) 
+            throws IOException, ServletException {
+        String idParam = request.getParameter("id");
+        try {
+            int id = Integer.parseInt(idParam);
+            boolean success = inventoryService.voidTransaction(id);
+            if (success) {
+                response.sendRedirect(request.getContextPath() + "/admin/inventory?action=list&success=void");
+            }
+        } catch (Exception e) {
+            reloadDataWithError(request, response, "Hủy không thành công: " + e.getMessage());
+        }
+    }
+
+    private void handleExportCSV(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setContentType("text/csv; charset=UTF-8");
+        response.setHeader("Content-Disposition", "attachment; filename=\"inventory_report.csv\"");
+        
+        // Thêm BOM để Excel nhận diện UTF-8
+        response.getOutputStream().write(0xEF);
+        response.getOutputStream().write(0xBB);
+        response.getOutputStream().write(0xBF);
+
+        try (PrintWriter writer = new PrintWriter(response.getOutputStream())) {
+            writer.println("ID,Sản phẩm,Loại,Số lượng,Giá,Lý do,Ngày tạo,Trạng thái");
+            List<InventoryTransactionDTO> list = inventoryService.getAllTransactionsDTO();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            
+            for (InventoryTransactionDTO d : list) {
+                writer.printf("%d,%s,%s,%d,%s,%s,%s,%s\n",
+                    d.getId(), d.getProductName(), d.getTransactionType(),
+                    d.getQuantity(), d.getPrice().toString(), d.getReason(),
+                    d.getCreatedAt().format(formatter), d.getStatus());
+            }
         }
     }
 
@@ -73,15 +119,19 @@ public class InventoryAdminController extends HttpServlet {
      */
     private void handleList(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Lấy lịch sử kho dạng DTO liên bảng (chứa cả tên và ảnh sản phẩm)
+        loadInventoryData(request);
+        request.getRequestDispatcher("/WEB-INF/views/admin/inventory_list.jsp").forward(request, response);
+    }
+
+    /**
+     * Nạp dữ liệu cần thiết (transactions và products) vào request attribute.
+     * Giúp tái sử dụng code và dễ bảo trì.
+     */
+    private void loadInventoryData(HttpServletRequest request) {
         List<InventoryTransactionDTO> transactions = inventoryService.getAllTransactionsDTO();
-
-        // Lấy danh sách sản phẩm phục vụ cho thanh chọn sản phẩm (Select Option) trong Form Nhập/Xuất kho nhanh
         List<Product> products = productService.findAll();
-
         request.setAttribute("transactions", transactions);
         request.setAttribute("products", products);
-        request.getRequestDispatcher("/WEB-INF/views/admin/inventory_list.jsp").forward(request, response);
     }
 
     /**
@@ -129,7 +179,9 @@ public class InventoryAdminController extends HttpServlet {
             } else {
                 throw new RuntimeException("Database error occurred while processing inventory transaction.");
             }
-
+        } catch (NumberFormatException e) {
+            // Lỗi khi người dùng nhập chữ vào trường số hoặc để trống định dạng số
+            reloadDataWithError(request, response, "Invalid number format for Quantity or Price.");
         } catch (IllegalArgumentException e) {
             // Lỗi nghiệp vụ đầu vào
             reloadDataWithError(request, response, e.getMessage());
@@ -144,11 +196,7 @@ public class InventoryAdminController extends HttpServlet {
      */
     private void reloadDataWithError(HttpServletRequest request, HttpServletResponse response, String errorMsg)
             throws ServletException, IOException {
-        List<InventoryTransactionDTO> transactions = inventoryService.getAllTransactionsDTO();
-        List<Product> products = productService.findAll();
-
-        request.setAttribute("transactions", transactions);
-        request.setAttribute("products", products);
+        loadInventoryData(request);
         request.setAttribute("error", errorMsg); // Gửi thông điệp lỗi tiếng Anh về JSP
 
         request.getRequestDispatcher("/WEB-INF/views/admin/inventory_list.jsp").forward(request, response);

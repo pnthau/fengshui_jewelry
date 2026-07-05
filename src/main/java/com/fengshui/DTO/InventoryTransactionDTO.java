@@ -23,5 +23,6 @@ public class InventoryTransactionDTO {
     private String reason;
     private LocalDateTime createdAt;
     private int adminId;
+    private String status;
 
 }

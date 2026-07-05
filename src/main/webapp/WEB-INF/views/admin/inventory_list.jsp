@@ -7,13 +7,12 @@
     <meta charset="UTF-8">
     <title>Nhật Ký Xuất Nhập Kho - Phong Thủy Hậu</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- DataTables Bootstrap 5 CSS -->
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         body { font-family: 'Quicksand', sans-serif; }
-        .border-gold { border: 2px solid #D4AF37 !important; }
         .text-gold { color: #D4AF37 !important; }
-        .badge-in { background-color: #22c55e !important; color: white; }
-        .badge-out { background-color: #ef4444 !important; color: white; }
     </style>
 </head>
 <body class="bg-light mt-4">
@@ -28,6 +27,9 @@
             </a>
             <a href="${pageContext.request.contextPath}/admin/orders?action=list" class="btn btn-outline-secondary">
                 <i class="bi bi-receipt-cutoff me-1"></i> Đơn hàng
+            </a>
+            <a href="${pageContext.request.contextPath}/admin/inventory?action=export" class="btn btn-success">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Xuất CSV
             </a>
             <!-- Nút kích hoạt Modal tạo phiếu kho nhanh -->
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTxModal">
@@ -53,10 +55,46 @@
         </div>
     </c:if>
 
+    <!-- BỘ LỌC NÂNG CAO (SEARCH BY COLUMN) -->
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body bg-white rounded">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-muted">Tìm theo tên sản phẩm</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" id="searchProduct" class="form-control border-start-0 ps-0" placeholder="Nhập tên sản phẩm...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted">Loại giao dịch</label>
+                    <select id="filterType" class="form-select">
+                        <option value="">-- Tất cả loại --</option>
+                        <option value="IMPORT">📥 NHẬP KHO</option>
+                        <option value="EXPORT">📤 XUẤT KHO</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted">Trạng thái phiếu</label>
+                    <select id="filterStatus" class="form-select">
+                        <option value="">-- Tất cả trạng thái --</option>
+                        <option value="COMPLETED">Hoạt động</option>
+                        <option value="VOIDED">Đã hủy</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" id="resetFilter" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Làm mới
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- BẢNG NHẬT KÝ CHI TIẾT (DTO LÊN BẢNG) -->
     <div class="card shadow border-0">
         <div class="card-body p-0">
-            <table class="table table-hover table-bordered mb-0 align-middle">
+            <table id="inventoryTable" class="table table-hover table-bordered mb-0 align-middle">
                 <thead class="table-dark">
                 <tr>
                     <th style="width: 5%">ID</th>
@@ -64,7 +102,8 @@
                     <th style="width: 12%" class="text-center">Loại giao dịch</th>
                     <th style="width: 10%" class="text-center">Số lượng</th>
                     <th style="width: 13%">Đơn giá nhập/xuất</th>
-                    <th style="width: 25%">Lý do thay đổi</th>
+                    <th style="width: 20%">Lý do thay đổi</th>
+                    <th style="width: 5%">Thao tác</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -84,8 +123,9 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="text-center">
-              <span class="badge px-3 py-2 ${tx.transactionType == 'IMPORT' ? 'badge-in' : 'badge-out'}">
+                        <!-- Gắn data-search để DataTables lọc theo code thay vì icon -->
+                        <td class="text-center" data-search="${tx.transactionType}">
+              <span class="badge px-3 py-2 ${tx.transactionType == 'IMPORT' ? 'badge-in' : 'badge-out'}" data-type="${tx.transactionType}">
                       ${tx.transactionType == 'IMPORT' ? '📥 NHẬP KHO' : '📤 XUẤT KHO'}
               </span>
                         </td>
@@ -96,6 +136,17 @@
                         <td>
                             <span class="text-dark d-block">${tx.reason}</span>
                             <small class="text-muted"><i class="bi bi-clock me-1"></i>${tx.createdAt}</small>
+                        </td>
+                        <!-- Gắn data-search để lọc trạng thái chuẩn xác -->
+                        <td data-search="${tx.status}">
+                            <c:if test="${tx.status != 'VOIDED'}">
+                                <form action="${pageContext.request.contextPath}/admin/inventory" method="POST" onsubmit="return confirm('Bạn có chắc muốn hủy phiếu này?')">
+                                    <input type="hidden" name="action" value="void">
+                                    <input type="hidden" name="id" value="${tx.id}">
+                                    <button class="btn btn-sm btn-outline-danger">Hủy</button>
+                                </form>
+                            </c:if>
+                            <c:if test="${tx.status == 'VOIDED'}"><span class="badge bg-secondary">Đã hủy</span></c:if>
                         </td>
                     </tr>
                 </c:forEach>
@@ -163,5 +214,58 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- JQuery & DataTables JS -->
+<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        var table = $('#inventoryTable').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json" // Việt hóa giao diện
+            },
+            "order": [[0, "desc"]], // Mặc định sắp xếp theo ID giảm dần
+            "pageLength": 10, // Số dòng trên mỗi trang
+            "columnDefs": [
+                { "orderable": false, "targets": 6 }, // Vô hiệu hóa sắp xếp cột "Thao tác"
+                { "visible": true, "targets": [1, 2, 6] }
+            ],
+            "dom": '<"d-flex justify-content-between align-items-center p-3"<"d-flex align-items-center"l>>t<"d-flex justify-content-between align-items-center p-3"ip>'
+        });
+
+        // 1. Tìm kiếm theo Tên sản phẩm (Cột index 1)
+        $('#searchProduct').on('keyup', function() {
+            table.column(1).search(this.value).draw();
+        });
+
+        // 2. Lọc theo Loại giao dịch (Cột index 2)
+        $('#filterType').on('change', function() {
+            var val = $(this).val();
+            // Tìm kiếm chính xác (exact match) dựa trên data-search
+            table.column(2).search(val ? '^' + val + '$' : '', true, false).draw();
+        });
+
+        // 3. Lọc theo Trạng thái (Cột index 6)
+        $('#filterStatus').on('change', function() {
+            var val = $(this).val();
+            // Lọc theo code trạng thái COMPLETED hoặc VOIDED gắn trong data-search
+            table.column(6).search(val ? '^' + val + '$' : '', true, false).draw();
+        });
+
+        // Nút Reset bộ lọc
+        $('#resetFilter').on('click', function() {
+            $('#searchProduct').val('');
+            $('#filterType').val('');
+            $('#filterStatus').val('');
+            table.columns().search('').draw();
+        });
+
+        // Tự động đóng alert sau 3 giây
+        setTimeout(function() {
+            $(".alert").fadeOut('slow');
+        }, 3000);
+    });
+</script>
 </body>
 </html>

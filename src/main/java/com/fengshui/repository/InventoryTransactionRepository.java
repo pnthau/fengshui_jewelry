@@ -11,6 +11,7 @@ import java.util.List;
 public class InventoryTransactionRepository extends BaseRepository implements IInventoryTransactionRepository {
     private static final String SELECT_ALL_TRANSACTIONS = "SELECT * FROM inventory_transactions ORDER BY created_at DESC";
     private static final String SELECT_TRANSACTIONS_BY_PRODUCT_ID = "SELECT * FROM inventory_transactions WHERE product_id = ? ORDER BY created_at DESC";
+    private static final String SELECT_BY_ID = "SELECT * FROM inventory_transactions WHERE id = ?";
     private static final String INSERT_TRANSACTION = "INSERT INTO inventory_transactions (product_id, transaction_type, quantity, price, reason, created_by) VALUES (?, ?, ?, ?, ?, ?)";
 
     private static final String SELECT_ALL_TRANSACTIONS_WITH_JOIN =
@@ -25,6 +26,8 @@ public class InventoryTransactionRepository extends BaseRepository implements II
                     "LEFT JOIN products p ON t.product_id = p.id " +
                     "WHERE t.product_id = ? " +
                     "ORDER BY t.created_at DESC";
+
+    private static final String UPDATE_STATUS = "UPDATE inventory_transactions SET status = ? WHERE id = ?";
     
     @Override
     public List<InventoryTransaction> findAll() {
@@ -132,6 +135,30 @@ public class InventoryTransactionRepository extends BaseRepository implements II
         }
         return rowsInserted > 0;
     }
+
+    public InventoryTransaction findById(int id) {
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(SELECT_BY_ID)) {
+            preparedStatement.setInt(1, id);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return mapResultSetToEntity(resultSet);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public boolean updateStatus(Connection conn, int id, String status) throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement(UPDATE_STATUS)) {
+            stmt.setString(1, status);
+            stmt.setInt(2, id);
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
     private static InventoryTransaction mapResultSetToEntity(ResultSet resultSet) throws SQLException {
         InventoryTransaction tx = new InventoryTransaction();
         tx.setId(resultSet.getInt("id"));
@@ -145,6 +172,7 @@ public class InventoryTransactionRepository extends BaseRepository implements II
             tx.setCreatedAt(ts.toLocalDateTime());
         }
         tx.setCreatedBy(resultSet.getInt("created_by"));
+        tx.setStatus(resultSet.getString("status"));
         return tx;
     }
     private InventoryTransactionDTO mapResultSetToDTO(ResultSet rs) throws SQLException {
@@ -160,6 +188,7 @@ public class InventoryTransactionRepository extends BaseRepository implements II
                 .reason(rs.getString("reason"))
                 .createdAt(ts != null ? ts.toLocalDateTime() : null)
                 .adminId(rs.getInt("created_by"))
+                .status(rs.getString("status"))
                 .build();
     }
 }

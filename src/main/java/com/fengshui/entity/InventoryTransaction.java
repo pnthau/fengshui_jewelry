@@ -19,4 +19,5 @@ public class InventoryTransaction {
     private String reason;
     private LocalDateTime createdAt;
     private int createdBy; // Links to User ID (Admin)
+    private String status; // 'COMPLETED' or 'VOIDED'
 }
