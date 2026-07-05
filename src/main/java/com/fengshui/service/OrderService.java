@@ -3,36 +3,32 @@ package com.fengshui.service;
 import com.fengshui.entity.CartItem;
 import com.fengshui.entity.Order;
 import com.fengshui.entity.OrderItem;
-import com.fengshui.repository.BaseRepository;
-import com.fengshui.repository.IOrderItemRepository;
-import com.fengshui.repository.IOrderRepository;
-import com.fengshui.repository.IProductRepository;
-import com.fengshui.repository.OrderItemRepository;
-import com.fengshui.repository.OrderRepository;
-import com.fengshui.repository.ProductRepository;
+import com.fengshui.entity.Product;
+import com.fengshui.repository.*;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class OrderService implements IOrderService {
     private final IOrderRepository orderRepository;
-    private final IProductRepository productRepository;
     private final IOrderItemRepository orderItemRepository;
+    private final IProductRepository productRepository;
 
-    // Constructor mặc định (dùng cho môi trường chạy thật)
     public OrderService() {
         this.orderRepository = new OrderRepository();
-        this.productRepository = new ProductRepository();
         this.orderItemRepository = new OrderItemRepository();
+        this.productRepository = new ProductRepository();
     }
 
-    // Constructor để inject các dependency (dùng cho Unit Test)
-    public OrderService(IOrderRepository orderRepository, IOrderItemRepository orderItemRepository, IProductRepository productRepository) {
-        this.orderRepository = orderRepository;
-        this.orderItemRepository = orderItemRepository;
-        this.productRepository = productRepository;
+
+    public OrderService(IOrderRepository orderRepo, IOrderItemRepository orderItemRepo, IProductRepository prodRepo) {
+        this.orderRepository = orderRepo;
+        this.orderItemRepository = orderItemRepo;
+        this.productRepository = prodRepo;
+        // this.transactionRepository = new InventoryTransactionRepository(); // Tạm để nguyên
     }
 
     @Override
@@ -43,107 +39,6 @@ public class OrderService implements IOrderService {
     @Override
     public Order findByID(int id) {
         return orderRepository.findByID(id);
-    }
-
-    @Override
-    public boolean placeOrder(Order order, List<OrderItem> items) {
-        Connection connection = null;
-        try {
-            connection = ((BaseRepository) orderRepository).getConnection();
-            connection.setAutoCommit(false);
-
-            if (!orderRepository.save(connection, order)) {
-                connection.rollback();
-                return false;
-            }
-
-            for (OrderItem item : items) {
-                item.setOrderId(order.getId());
-                if (!orderItemRepository.save(connection, item)) {
-                    connection.rollback();
-                    return false;
-                }
-                if (!productRepository.reduceStock(connection, item.getProductId(), item.getQuantity())) {
-                    connection.rollback();
-                    throw new RuntimeException("Không đủ số lượng sản phẩm " + item.getProductId() + " trong kho.");
-                }
-            }
-
-            connection.commit();
-            return true;
-        } catch (SQLException e) {
-            try {
-                if (connection != null) {
-                    connection.rollback();
-                }
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-            e.printStackTrace();
-            return false;
-        } finally {
-            try {
-                if (connection != null) {
-                    connection.setAutoCommit(true);
-                    connection.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @Override
-    public boolean placeOrderFromCart(Order order, List<CartItem> items) {
-        Connection connection = null;
-        try {
-            connection = ((BaseRepository) orderRepository).getConnection();
-            connection.setAutoCommit(false);
-
-            if (!orderRepository.save(connection, order)) {
-                connection.rollback();
-                return false;
-            }
-
-            for (CartItem cartItem : items) {
-                OrderItem orderItem = new OrderItem();
-                orderItem.setOrderId(order.getId());
-                orderItem.setProductId(cartItem.getProduct().getId());
-                orderItem.setQuantity(cartItem.getQuantity());
-                orderItem.setPriceAtPurchase(cartItem.getProduct().getPrice());
-
-                if (!orderItemRepository.save(connection, orderItem)) {
-                    connection.rollback();
-                    return false;
-                }
-                if (!productRepository.reduceStock(connection, orderItem.getProductId(), orderItem.getQuantity())) {
-                    connection.rollback();
-                    throw new RuntimeException("Không đủ số lượng sản phẩm " + orderItem.getProductId() + " trong kho.");
-                }
-            }
-
-            connection.commit();
-            return true;
-        } catch (SQLException e) {
-            try {
-                if (connection != null) {
-                    connection.rollback();
-                }
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-            e.printStackTrace();
-            return false;
-        } finally {
-            try {
-                if (connection != null) {
-                    connection.setAutoCommit(true);
-                    connection.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     @Override
@@ -221,6 +116,60 @@ public class OrderService implements IOrderService {
                 e.printStackTrace();
             }
         }
+    }
+
+    @Override
+    public boolean placeOrder(Order order, List<OrderItem> items) {
+        boolean isSuccess = false;
+        try (Connection connection = ((BaseRepository) orderRepository).getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                boolean orderSaved = orderRepository.save(connection, order);
+                if (!orderSaved) {
+                    throw new SQLException("Save() Order failure");
+                }
+                for (OrderItem item : items) {
+                    item.setOrderId(order.getId());
+
+                    Product product = productRepository.findByID(item.getProductId());
+                    if (product == null || product.getQuantity() < item.getQuantity()) {
+                        String productName = product != null ? product.getName() : "";
+
+                        throw new SQLException("Số lượng mua vượt quá số lượng bán. " +
+                                "Kho hiện tại chỉ còn: " +
+                                (product != null ? product.getQuantity() : 0));
+                    }
+
+                    boolean itemSaved = orderItemRepository.save(connection, item);
+                    if (!itemSaved) {
+                        throw new SQLException("Save() OrderItem failure");
+                    }
+                }
+                connection.commit();
+                isSuccess = true;
+                System.out.println("✅ Order succeed! COMMIT");
+            } catch (SQLException customerEx) {
+                connection.rollback();
+                System.out.println("❌ Order failure! ROLLBACK " + customerEx.getMessage());
+                throw new RuntimeException(customerEx.getMessage());
+            }
+        } catch (SQLException serverEx) {
+            throw new RuntimeException("Lỗi kết nối Cơ sở dữ liệu: " + serverEx.getMessage());
+        }
+        return isSuccess;
+    }
+
+    @Override
+    public boolean placeOrderFromCart(Order order, List<CartItem> items) {
+        List<OrderItem> orderItems = new ArrayList<>();
+        for (CartItem cartItem : items) {
+            OrderItem item = new OrderItem();
+            item.setProductId(cartItem.getProduct().getId());
+            item.setQuantity(cartItem.getQuantity());
+            item.setPriceAtPurchase(cartItem.getProduct().getPrice());
+            orderItems.add(item);
+        }
+        return this.placeOrder(order, orderItems);
     }
 
     @Override

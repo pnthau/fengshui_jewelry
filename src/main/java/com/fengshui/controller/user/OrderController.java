@@ -49,7 +49,8 @@ public class OrderController extends HttpServlet {
             session.removeAttribute("cart");
             resp.setStatus(HttpServletResponse.SC_OK);
         } catch (RuntimeException ex) {
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, ex.getMessage());
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().print(ex.getMessage());
         }
     }
 }

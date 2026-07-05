@@ -62,7 +62,13 @@ public class QuickOrderController extends HttpServlet {
 
         List<OrderItem> itemList = new ArrayList<>();
         itemList.add(item);
-        orderService.placeOrder(order, itemList);
-        resp.setStatus(HttpServletResponse.SC_OK);
+        try {
+            orderService.placeOrder(order, itemList);
+            resp.setStatus(HttpServletResponse.SC_OK);
+        } catch (RuntimeException ex) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST); // Trả mã 400
+            resp.getWriter().print(ex.getMessage()); // Gửi thư tay (Plain Text)
+        }
+
     }
 }
