@@ -49,10 +49,10 @@
                 <input type="hidden" name="id" value="${order.id}">
                 <div class="input-group">
                   <select name="status" class="form-select">
-                    <option value="Chờ xử lý" ${order.status == 'Chờ xử lý' ? 'selected' : ''}>Chờ xử lý</option>
-                    <option value="Đang giao" ${order.status == 'Đang giao' ? 'selected' : ''}>Đang giao</option>
-                    <option value="Đã giao" ${order.status == 'Đã giao' ? 'selected' : ''}>Đã giao</option>
-                    <option value="Đã hủy" ${order.status == 'Đã hủy' ? 'selected' : ''}>Đã hủy</option>
+                    <option value="PENDING" ${order.status == 'PENDING' || order.status == 'Chờ xử lý' ? 'selected' : ''}>Chờ xử lý</option>
+                    <option value="DELIVERING" ${order.status == 'DELIVERING' || order.status == 'Đang giao' ? 'selected' : ''}>Đang giao</option>
+                    <option value="DELIVERED" ${order.status == 'DELIVERED' || order.status == 'Đã giao' ? 'selected' : ''}>Đã giao</option>
+                    <option value="CANCELLED" ${order.status == 'CANCELLED' || order.status == 'Đã hủy' ? 'selected' : ''}>Đã hủy</option>
                   </select>
                   <button type="submit" class="btn btn-success">Cập nhật</button>
                 </div>
@@ -128,8 +128,8 @@
             <td>${o.customerAddress}</td>
             <td><fmt:formatNumber value="${o.totalPrice}" type="number" maxFractionDigits="0"/> VNĐ</td>
             <td>
-              <span class="badge ${o.status == 'Đã giao' ? 'bg-success' : o.status == 'Đang giao' ? 'bg-info' : o.status == 'Đã hủy' ? 'bg-danger' : 'bg-warning'}">
-                  ${o.status}
+              <span class="badge ${o.status == 'Đã giao' || o.status == 'DELIVERED' ? 'bg-success' : o.status == 'Đang giao' || o.status == 'DELIVERING' ? 'bg-info' : o.status == 'Đã hủy' || o.status == 'CANCELLED' ? 'bg-danger' : 'bg-warning'}">
+                  ${o.status == 'PENDING' ? 'Chờ xử lý' : o.status == 'DELIVERING' ? 'Đang giao' : o.status == 'DELIVERED' ? 'Đã giao' : o.status == 'CANCELLED' ? 'Đã hủy' : o.status}
               </span>
             </td>
             <td>

@@ -9,6 +9,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -114,22 +115,27 @@ public class OrderAdminController extends HttpServlet {
     private void handleUpdateStatus(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
 
-            String idParam = request.getParameter("id");
-            String status = request.getParameter("status");
-
-            if (idParam == null || idParam.trim().isEmpty()) {
-                response.sendRedirect(request.getContextPath() + "/admin/orders?action=" + ACTION_LIST);
-                return;
-            }
+        String idParam = request.getParameter("id");
+        String status = request.getParameter("status");
+        int id = 0;
+        if (idParam == null || idParam.trim().isEmpty()) {
+            response.sendRedirect(request.getContextPath() + "/admin/orders?action=" + ACTION_LIST);
+            return;
+        }
         try {
-            int id = Integer.parseInt(idParam);
+            id = Integer.parseInt(idParam);
             orderService.updateStatus(id, status);
-            response.sendRedirect(request.getContextPath() + "/admin/orders?action=details&id=" + id);
+            response.sendRedirect(request.getContextPath() + "/admin/orders?action=details&id=" + id + "&success=1");
         } catch (NumberFormatException e) {
             response.sendRedirect(request.getContextPath() + "/admin/orders?action=" + ACTION_LIST);
         } catch (RuntimeException e) {
+            Order order = orderService.findByID(id);
+            List<OrderItem> items = orderService.findItemsByOrderID(id);
+
             request.setAttribute("error", e.getMessage());
             request.setAttribute("orderId", idParam);
+            request.setAttribute("order", order);
+            request.setAttribute("items", items);
 
             request.getRequestDispatcher("/WEB-INF/views/admin/order_list.jsp").forward(request, response);
         }

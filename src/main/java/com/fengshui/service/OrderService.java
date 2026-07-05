@@ -59,8 +59,11 @@ public class OrderService implements IOrderService {
                 if (!orderRepository.updateStatus(connection, id, status)) {
                     throw new SQLException("Failed to update status for order #" + id);
                 }
+                com.fengshui.enums.OrderStatus newStatus = com.fengshui.enums.OrderStatus.fromString(status);
+                com.fengshui.enums.OrderStatus oldStatusEnum = com.fengshui.enums.OrderStatus.fromString(oldOrder.getStatus());
+
                 // TRƯỜNG HỢP 1: Đơn đang hoạt động (đã trừ kho) nay bị HỦY -> Tiến hành HOÀN KHO
-                if (isDeductedStatus(oldOrder.getStatus()) && "Đã hủy".equals(status)) {
+                if (isDeductedStatus(oldOrder.getStatus()) && newStatus == com.fengshui.enums.OrderStatus.CANCELLED) {
                     for (OrderItem item : items) {
                         boolean stockRestored = productRepository.increaseStock(connection, item.getProductId(), item.getQuantity());
                         if (!stockRestored) {
@@ -69,7 +72,7 @@ public class OrderService implements IOrderService {
                     }
                 }
                 // TRƯỜNG HỢP 2 (QUAN TRỌNG): Đơn từ trạng thái HỦY quay lại trạng thái HOẠT ĐỘNG -> Bắt buộc phải KIỂM KHO & TÁI TRỪ KHO
-                else if ("Đã hủy".equals(oldOrder.getStatus()) && isDeductedStatus(status)) {
+                else if (oldStatusEnum == com.fengshui.enums.OrderStatus.CANCELLED && isDeductedStatus(status)) {
                     for (OrderItem item : items) {
                         // Thử trừ kho, nếu hàm trả về false tức là hàng đã hết hoặc không đủ cung cấp
                         boolean stockReduced = productRepository.reduceStock(connection, item.getProductId(), item.getQuantity());
@@ -164,11 +167,13 @@ public class OrderService implements IOrderService {
         return orderRepository.delete(id);
     }
     private boolean isPendingStatus(String status) {
-        return "Chờ xử lý".equals(status) || "PENDING".equalsIgnoreCase(status);
+        com.fengshui.enums.OrderStatus enumStatus = com.fengshui.enums.OrderStatus.fromString(status);
+        return enumStatus == com.fengshui.enums.OrderStatus.PENDING;
     }
 
     private boolean isDeliveryStatus(String status) {
-        return "Đang giao".equals(status) || "Đã giao".equals(status) || "DELIVERED".equalsIgnoreCase(status) || "SHIPPED".equalsIgnoreCase(status);
+        com.fengshui.enums.OrderStatus enumStatus = com.fengshui.enums.OrderStatus.fromString(status);
+        return enumStatus == com.fengshui.enums.OrderStatus.DELIVERING || enumStatus == com.fengshui.enums.OrderStatus.DELIVERED;
     }
     private boolean isDeductedStatus(String status) {
         return isPendingStatus(status) || isDeliveryStatus(status);
