@@ -3,6 +3,7 @@ package com.fengshui.controller;
 import com.fengshui.entity.User;
 import com.fengshui.service.IUserService;
 import com.fengshui.service.UserService;
+import com.fengshui.controller.admin.AdminSecurityFilter;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -26,6 +27,12 @@ public class LoginController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // Kiểm tra xem có bị SecurityFilter "đá" văng ra không
+        String error = request.getParameter("error");
+        if (AdminSecurityFilter.ERR_UNAUTHORIZED.equals(error)) {
+            request.setAttribute("errorMessage", "Cảnh báo: Bạn không có quyền truy cập vào khu vực Quản trị viên!");
+        }
+
         // Hiển thị trang đăng nhập
         request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
     }

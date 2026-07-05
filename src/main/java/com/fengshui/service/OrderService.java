@@ -168,35 +168,28 @@ public class OrderService implements IOrderService {
             // 2. Xử lý tồn kho dựa trên sự thay đổi trạng thái
             List<OrderItem> orderItems = orderItemRepository.findByOrderID(orderId);
 
-            // Trừ kho khi chuyển sang SUCCESS
-            if (!"SUCCESS".equals(oldStatus) && "SUCCESS".equals(newStatus)) {
-                for (OrderItem item : orderItems) {
-                    if (!productRepository.reduceStock(connection, item.getProductId(), item.getQuantity())) {
-                        connection.rollback();
-                        throw new RuntimeException("Không đủ số lượng sản phẩm " + item.getProductName() + " trong kho để duyệt đơn hàng.");
-                    }
-                }
-            }
-            // Hoàn kho khi chuyển sang CANCELLED từ trạng thái không phải CANCELLED
-            else if (!"CANCELLED".equals(oldStatus) && "CANCELLED".equals(newStatus)) {
+            // Quy định: "CANCELLED" là trạng thái DUY NHẤT mà hàng hóa được trả lại kho.
+            // Các trạng thái còn lại (PENDING, SHIPPING, SUCCESS) đều là trạng thái "Active" (Đã bị trừ kho lúc đặt hàng).
+            boolean isOldActive = !"CANCELLED".equals(oldStatus);
+            boolean isNewActive = !"CANCELLED".equals(newStatus);
+
+            if (isOldActive && !isNewActive) {
+                // Trường hợp 1: HỦY ĐƠN HÀNG -> Hoàn trả lại kho
                 for (OrderItem item : orderItems) {
                     if (!productRepository.increaseStock(connection, item.getProductId(), item.getQuantity())) {
                         connection.rollback();
                         throw new RuntimeException("Lỗi khi hoàn tác kho: " + item.getProductName() + " cho đơn hàng bị hủy.");
                     }
                 }
-            }
-            // Nếu chuyển từ SUCCESS sang trạng thái khác (ví dụ: CANCELLED), cần hoàn kho
-            else if ("SUCCESS".equals(oldStatus) && !"SUCCESS".equals(newStatus)) {
+            } else if (!isOldActive && isNewActive) {
+                // Trường hợp 2: KHÔI PHỤC ĐƠN HÀNG (Từ Hủy -> Chờ xử lý) -> Phải trừ kho lại
                 for (OrderItem item : orderItems) {
-                    if (!productRepository.increaseStock(connection, item.getProductId(), item.getQuantity())) {
+                    if (!productRepository.reduceStock(connection, item.getProductId(), item.getQuantity())) {
                         connection.rollback();
-                        throw new RuntimeException("Lỗi khi hoàn tác kho: " + item.getProductName() + " do thay đổi trạng thái đơn hàng.");
+                        throw new RuntimeException("Không đủ " + item.getProductName() + " trong kho để phục hồi đơn hàng.");
                     }
                 }
             }
-
-
             connection.commit();
             return true;
         } catch (SQLException e) {

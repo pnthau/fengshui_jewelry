@@ -12,6 +12,9 @@ import java.io.IOException;
 @WebFilter("/admin/*")
 public class AdminSecurityFilter implements Filter {
 
+    // Hằng số định nghĩa mã lỗi khi không có quyền truy cập
+    public static final String ERR_UNAUTHORIZED = "unauthorized";
+
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         // Khởi tạo filter (nếu cần)
@@ -31,7 +34,7 @@ public class AdminSecurityFilter implements Filter {
         // Nếu không phải admin và đang cố gắng truy cập vào /admin/*
         if (!isAdmin) {
             // Chuyển hướng về trang đăng nhập hoặc trang lỗi
-            httpResponse.sendRedirect(httpRequest.getContextPath() + "/login?error=unauthorized");
+            httpResponse.sendRedirect(httpRequest.getContextPath() + "/login?error=" + ERR_UNAUTHORIZED);
         } else {
             // Nếu là admin, cho phép request tiếp tục
             chain.doFilter(request, response);
