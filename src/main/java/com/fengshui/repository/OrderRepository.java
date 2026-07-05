@@ -113,6 +113,18 @@ public class OrderRepository extends BaseRepository implements IOrderRepository 
         }
         return rowsUpdated > 0;
     }
+    @Override
+    public boolean updateStatus(Connection connection, int id, String status) {
+        int rowsUpdated = 0;
+        try (PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_ORDER_STATUS)) {
+            preparedStatement.setString(1, status);
+            preparedStatement.setInt(2, id);
+            rowsUpdated = preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return rowsUpdated > 0;
+    }
 
     @Override
     public boolean delete(int id) {

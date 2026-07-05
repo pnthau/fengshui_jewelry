@@ -112,8 +112,8 @@ public class OrderAdminController extends HttpServlet {
      * Cập nhật trạng thái đơn hàng (ví dụ: Chờ duyệt, Đã duyệt, Đã giao...)
      */
     private void handleUpdateStatus(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        try {
+            throws IOException, ServletException {
+
             String idParam = request.getParameter("id");
             String status = request.getParameter("status");
 
@@ -121,12 +121,25 @@ public class OrderAdminController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/admin/orders?action=" + ACTION_LIST);
                 return;
             }
-
+        try {
             int id = Integer.parseInt(idParam);
             orderService.updateStatus(id, status);
             response.sendRedirect(request.getContextPath() + "/admin/orders?action=details&id=" + id);
         } catch (NumberFormatException e) {
             response.sendRedirect(request.getContextPath() + "/admin/orders?action=" + ACTION_LIST);
+        } catch (RuntimeException e) {
+            String errorMessage = e.getMessage();
+
+            // Do idParam đã vượt qua vòng lọc NumberFormatException ở trên nên việc ép kiểu lại ở đây là an toàn tuyệt đối 100%
+            int id = Integer.parseInt(idParam);
+            Order order = orderService.findByID(id);
+            List<OrderItem> items = orderService.findItemsByOrderID(id);
+
+            request.setAttribute("order", order);
+            request.setAttribute("items", items);
+            request.setAttribute("error", errorMessage); 
+
+            request.getRequestDispatcher("/WEB-INF/views/admin/order_list.jsp").forward(request, response);
         }
     }
 
