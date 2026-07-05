@@ -13,7 +13,7 @@
     <h3>${product == null ? 'Thêm sản phẩm mới' : 'Chỉnh sửa sản phẩm'}</h3>
   </div>
   <div class="card-body">
-    <form action="${pageContext.request.contextPath}/admin/products" method="POST">
+    <form action="${pageContext.request.contextPath}/admin/products" method="POST" enctype="multipart/form-data">
       <input type="hidden" name="action" value="${product == null ? 'add' : 'update'}">
       <input type="hidden" name="id" value="${product.id}">
 
@@ -44,8 +44,15 @@
       </div>
 
       <div class="mb-3">
-        <label class="form-label">Link Ảnh</label>
-        <input type="text" name="imageUrl" class="form-control" value="${product.imageURL}">
+        <label class="form-label">Tải lên ảnh sản phẩm</label>
+        <input type="file" name="imageFile" class="form-control" accept="image/*">
+        <!-- Vẫn giữ lại URL cũ trong ô ẩn để nếu người dùng không up ảnh mới thì không bị mất ảnh cũ -->
+        <input type="hidden" name="imageUrl" value="${product.imageURL}">
+        <c:if test="${not empty product.imageURL}">
+            <div class="mt-2">
+                <img src="${product.imageURL}" alt="Current Image" style="max-height: 100px; border-radius: 5px;" />
+            </div>
+        </c:if>
       </div>
 
       <div class="mb-3">

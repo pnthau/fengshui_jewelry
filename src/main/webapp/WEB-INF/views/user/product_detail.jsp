@@ -153,7 +153,7 @@
                             <div class="tab-pane fade show active" id="tab-video" role="tabpanel">
                                 <div class="ratio ratio-16x9 shadow-lg"
                                      style="border-radius: 15px; overflow: hidden; border: 1px solid #f39c12;">
-                                    <iframe src="${product.youtubeURL}" title="YouTube video" allowfullscreen></iframe>
+                                    <iframe class="product-video-iframe" src="" data-raw-url="${product.youtubeURL}" title="Product video" allowfullscreen></iframe>
                                 </div>
                             </div>
                             <div class="tab-pane fade" id="tab-image" role="tabpanel">
@@ -166,7 +166,7 @@
                         <!-- Chỉ có Video -->
                         <div class="ratio ratio-16x9 shadow-lg mt-3"
                              style="border-radius: 15px; overflow: hidden; border: 1px solid #f39c12;">
-                            <iframe src="${product.youtubeURL}" title="YouTube video" allowfullscreen></iframe>
+                            <iframe class="product-video-iframe" src="" data-raw-url="${product.youtubeURL}" title="Product video" allowfullscreen></iframe>
                         </div>
                     </c:when>
                     <c:otherwise>
@@ -338,5 +338,45 @@
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 <!-- Cart Logic -->
 <script src="${pageContext.request.contextPath}/assets/js/cart.js"></script>
+
+<!-- Multi-Platform Video Embed Auto-Parser -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Hàm chuyển đổi link nhúng đa nền tảng
+        function getEmbedUrl(rawUrl) {
+            if (!rawUrl) return "";
+            rawUrl = rawUrl.trim();
+
+            // 1. YouTube (sử dụng Regex tối giản đã sửa lỗi của chúng ta)
+            let ytReg = /(?:youtube\.com\/(?:embed\/|v\/|shorts\/|watch\?v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+            let ytMatch = rawUrl.match(ytReg);
+            if (ytMatch && ytMatch[1]) {
+                return "https://www.youtube.com/embed/" + ytMatch[1];
+            }
+
+            // 2. TikTok
+            let ttReg = /tiktok\.com\/@[^\/]+\/video\/(\d+)/i;
+            let ttMatch = rawUrl.match(ttReg);
+            if (ttMatch && ttMatch[1]) {
+                return "https://www.tiktok.com/embed/v2/" + ttMatch[1];
+            }
+
+            // 3. Facebook
+            if (rawUrl.includes("facebook.com") || rawUrl.includes("fb.watch")) {
+                return "https://www.facebook.com/plugins/video.php?href=" + encodeURIComponent(rawUrl) + "&show_text=false&t=0";
+            }
+
+            return rawUrl; // Fallback
+        }
+
+        // Vòng lặp duyệt các iframe của anh
+        document.querySelectorAll(".product-video-iframe").forEach(function(iframe) {
+            let rawUrl = iframe.dataset.rawUrl; // Cách 1 dùng dataset của anh
+            if (rawUrl) {
+                iframe.src = getEmbedUrl(rawUrl); // Cách 2 gán trực tiếp của anh
+            }
+        });
+    });
+</script>
 </body>
 </html>
