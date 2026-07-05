@@ -1,33 +1,13 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>Nhật Ký Xuất Nhập Kho - Phong Thủy Hậu</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- DataTables Bootstrap 5 CSS -->
-    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    <style>
-        body { font-family: 'Quicksand', sans-serif; }
-        .text-gold { color: #D4AF37 !important; }
-    </style>
-</head>
-<body class="bg-light mt-4">
-<div class="container">
+<%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
+
+<div class="container-fluid">
 
     <!-- Tiêu đề trang và điều hướng nhanh -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mt-4 mb-4">
         <h2><i class="bi bi-journal-album text-gold me-2"></i>Nhật Ký Xuất Nhập Kho</h2>
         <div class="gap-2 d-flex">
-            <a href="${pageContext.request.contextPath}/admin/products?action=list" class="btn btn-outline-secondary">
-                <i class="bi bi-box-seam me-1"></i> Sản phẩm
-            </a>
-            <a href="${pageContext.request.contextPath}/admin/orders?action=list" class="btn btn-outline-secondary">
-                <i class="bi bi-receipt-cutoff me-1"></i> Đơn hàng
-            </a>
             <a href="${pageContext.request.contextPath}/admin/inventory?action=export" class="btn btn-success">
                 <i class="bi bi-file-earmark-spreadsheet me-1"></i> Xuất CSV
             </a>
@@ -212,60 +192,3 @@
             </form>        </div>
     </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- JQuery & DataTables JS -->
-<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-
-<script>
-    $(document).ready(function() {
-        var table = $('#inventoryTable').DataTable({
-            "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/vi.json" // Việt hóa giao diện
-            },
-            "order": [[0, "desc"]], // Mặc định sắp xếp theo ID giảm dần
-            "pageLength": 10, // Số dòng trên mỗi trang
-            "columnDefs": [
-                { "orderable": false, "targets": 6 }, // Vô hiệu hóa sắp xếp cột "Thao tác"
-                { "visible": true, "targets": [1, 2, 6] }
-            ],
-            "dom": '<"d-flex justify-content-between align-items-center p-3"<"d-flex align-items-center"l>>t<"d-flex justify-content-between align-items-center p-3"ip>'
-        });
-
-        // 1. Tìm kiếm theo Tên sản phẩm (Cột index 1)
-        $('#searchProduct').on('keyup', function() {
-            table.column(1).search(this.value).draw();
-        });
-
-        // 2. Lọc theo Loại giao dịch (Cột index 2)
-        $('#filterType').on('change', function() {
-            var val = $(this).val();
-            // Tìm kiếm chính xác (exact match) dựa trên data-search
-            table.column(2).search(val ? '^' + val + '$' : '', true, false).draw();
-        });
-
-        // 3. Lọc theo Trạng thái (Cột index 6)
-        $('#filterStatus').on('change', function() {
-            var val = $(this).val();
-            // Lọc theo code trạng thái COMPLETED hoặc VOIDED gắn trong data-search
-            table.column(6).search(val ? '^' + val + '$' : '', true, false).draw();
-        });
-
-        // Nút Reset bộ lọc
-        $('#resetFilter').on('click', function() {
-            $('#searchProduct').val('');
-            $('#filterType').val('');
-            $('#filterStatus').val('');
-            table.columns().search('').draw();
-        });
-
-        // Tự động đóng alert sau 3 giây
-        setTimeout(function() {
-            $(".alert").fadeOut('slow');
-        }, 3000);
-    });
-</script>
-</body>
-</html>

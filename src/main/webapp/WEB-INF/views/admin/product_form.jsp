@@ -1,20 +1,19 @@
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${product == null ? 'Thêm trang sức mới' : 'Chỉnh sửa thông tin'}</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light mt-4">
-<div class="container">
-  <div class="card shadow-sm border-0">
+
+<div class="container-fluid">
+  <div class="card shadow-sm border-0 mt-4">
     <div class="card-header bg-white py-3">
       <h4 class="mb-0">${product == null ? 'Thêm trang sức mới' : 'Chỉnh sửa thông tin'}</h4>
     </div>
     <div class="card-body p-4">
+      <c:if test="${not empty error}">
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <i class="bi bi-exclamation-triangle-fill"></i> <strong>Lỗi:</strong> ${error}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      </c:if>
+
       <form action="${pageContext.request.contextPath}/admin/products" method="POST">
         <input type="hidden" name="action" value="${product == null ? 'add' : 'update'}">
         <c:if test="${product != null}">
@@ -26,15 +25,30 @@
             <label class="form-label fw-bold">Tên sản phẩm</label>
             <input type="text" name="name" class="form-control" value="${product.name}" required>
           </div>
-          <!-- Trường nhập liệu cho kho -->
           <div class="col-md-3 mb-3">
             <label class="form-label fw-bold">Giá bán (VNĐ)</label>
             <input type="number" name="price" class="form-control" value="${product.price}" required>
           </div>
-          <div class="col-md-3 mb-3">
-            <label class="form-label fw-bold">Số lượng tồn</label>
-            <input type="number" name="quantity" class="form-control" value="${product.quantity != null ? product.quantity : 0}" required>
-          </div>
+
+          <%-- Conditional fields for Quantity and Cost Price --%>
+          <c:choose>
+            <c:when test="${product == null}"> <%-- Add New Product --%>
+              <div class="col-md-3 mb-3">
+                <label class="form-label fw-bold">Số lượng nhập ban đầu</label>
+                <input type="number" name="initialQuantity" class="form-control" value="0" min="0" required>
+              </div>
+              <div class="col-md-3 mb-3">
+                <label class="form-label fw-bold">Giá nhập sỉ (VNĐ)</label>
+                <input type="number" name="costPrice" class="form-control" value="0" min="0" required>
+              </div>
+            </c:when>
+            <c:otherwise> <%-- Edit Existing Product --%>
+              <div class="col-md-3 mb-3">
+                <label class="form-label fw-bold">Số lượng tồn hiện tại</label>
+                <input type="number" name="quantity" class="form-control" value="${product.quantity}" disabled>
+              </div>
+            </c:otherwise>
+          </c:choose>
         </div>
 
         <div class="mb-3">
@@ -75,5 +89,3 @@
     </div>
   </div>
 </div>
-</body>
-</html>

@@ -1,0 +1,111 @@
+/* admin_style.css */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f7fa;
+}
+
+#wrapper {
+    display: flex;
+}
+
+#sidebar-wrapper {
+    min-height: 100vh;
+    margin-left: -15rem;
+    transition: margin .25s ease-out;
+    background-color: #212529; /* Dark background for sidebar */
+    color: rgba(255, 255, 255, .8);
+    width: 15rem;
+}
+
+#sidebar-wrapper .sidebar-heading {
+    padding: 0.875rem 1.25rem;
+    font-size: 1.2rem;
+    color: #fff;
+    background-color: #343a40; /* Slightly lighter dark for heading */
+}
+
+#sidebar-wrapper .list-group {
+    width: 15rem;
+}
+
+#sidebar-wrapper .list-group-item {
+    background-color: #212529;
+    color: rgba(255, 255, 255, .6);
+    border: none;
+    padding: 0.75rem 1.25rem;
+}
+
+#sidebar-wrapper .list-group-item:hover {
+    color: #fff;
+    background-color: #343a40;
+}
+
+#sidebar-wrapper .list-group-item.active {
+    color: #fff;
+    background-color: #007bff; /* Active item highlight */
+}
+
+#page-content-wrapper {
+    min-width: 100vw;
+}
+
+#wrapper.toggled #sidebar-wrapper {
+    margin-left: 0;
+}
+
+@media (min-width: 768px) {
+    #sidebar-wrapper {
+        margin-left: 0;
+    }
+
+    #page-content-wrapper {
+        min-width: 0;
+        width: 100%;
+    }
+
+    #wrapper.toggled #sidebar-wrapper {
+        margin-left: -15rem;
+    }
+}
+
+/* Custom styles for badges in inventory_list */
+.badge-in {
+    background-color: #28a745; /* Green for IMPORT */
+    color: #fff;
+}
+
+.badge-out {
+    background-color: #dc3545; /* Red for EXPORT */
+    color: #fff;
+}
+
+.text-gold {
+    color: #D4AF37 !important;
+}
+
+/* Adjust DataTables search/filter layout */
+.dataTables_wrapper .row:first-child {
+    margin-bottom: 1rem;
+}
+.dataTables_wrapper .row:last-child {
+    margin-top: 1rem;
+}
+.dataTables_filter {
+    text-align: right;
+}
+.dataTables_length {
+    text-align: left;
+}
+.dataTables_info {
+    padding-top: 0.85em;
+}
+.dataTables_paginate {
+    padding-top: 0.85em;
+}
+.dataTables_filter input {
+    margin-left: 0.5em;
+}
+.dataTables_length select {
+    margin-right: 0.5em;
+}

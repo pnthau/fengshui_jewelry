@@ -17,6 +17,9 @@ public class UserRepository extends BaseRepository implements IUserRepository {
     private static final String UPDATE_USER = "UPDATE users SET username = ?, password = ?, role = ? WHERE id = ?";
     private static final String DELETE_USER = "DELETE FROM users WHERE id = ?";
 
+    // SQL for Dashboard
+    private static final String SELECT_COUNT_ALL_USERS = "SELECT COUNT(*) FROM users";
+
     @Override
     public List<User> findAll() {
         List<User> users = new ArrayList<>();
@@ -137,5 +140,21 @@ public class UserRepository extends BaseRepository implements IUserRepository {
             e.printStackTrace();
         }
         return rowsDeleted > 0;
+    }
+
+    // New method for Dashboard
+    @Override
+    public int countAllUsers() {
+        int count = 0;
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(SELECT_COUNT_ALL_USERS);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
+            if (resultSet.next()) {
+                count = resultSet.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return count;
     }
 }

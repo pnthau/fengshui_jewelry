@@ -10,4 +10,7 @@ public interface IUserRepository {
     boolean save(User user);
     boolean update(User user);
     boolean delete(int id);
+
+    // New method for Dashboard
+    int countAllUsers();
 }
