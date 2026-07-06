@@ -336,7 +336,8 @@
 <div class="floating-cart-btn" onclick="openCartModal()" data-bs-toggle="tooltip" data-bs-placement="left"
      title="Giỏ Hàng Của Bạn">
     <i class="bi bi-cart3"></i>
-    <span class="cart-badge" id="cartBadgeCount">${sessionScope.cart != null ? sessionScope.cart.totalQuantity : 0}</span>
+    <span class="cart-badge"
+          id="cartBadgeCount">${sessionScope.cart != null ? sessionScope.cart.totalQuantity : 0}</span>
 </div>
 
 <!-- CART MODAL -->
@@ -415,6 +416,7 @@
 </footer>
 
 <script src="${pageContext.request.contextPath}/assets/js/fengshui-utils.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/bootstrap.bundle.min.js"></script>
 
 <script>
@@ -629,7 +631,7 @@
                 let customerAddress = customerAddressInputEl.value || '';
 
                 const contextPath = "${pageContext.request.contextPath}";
-                const url = contextPath + 'quick-order';
+                const url = contextPath + '/quick-order';
 
                 const params = new URLSearchParams();
                 params.append('productId', productId);
@@ -646,14 +648,20 @@
                         body: params.toString()
                     });
                     if (response.ok) {
-                        alert("🎉 Đặt hàng thành công!");
+                        FengShuiToast.success("Đặt hàng thành công! Nhân viên sẽ gọi lại ngay.", 6000);
                         bootstrap.Modal.getInstance(modalEl).hide();
                     } else {
-                        alert("❌ Có lỗi xảy ra từ Server!");
+                        const errorMessage = await response.text();
+
+                        if (errorMessage && errorMessage.trim() !== "") {
+                            FengShuiToast.error(errorMessage);
+                        } else {
+                            FengShuiToast.error("Có lỗi xảy ra từ hệ thống. Vui lòng thử lại!");
+                        }
                     }
                 } catch (error) {
                     console.error("Lỗi:", error);
-                    alert("⚠️ Không thể kết nối đến máy chủ.");
+                    FengShuiToast.error("Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng!");
                 }
             });
         }

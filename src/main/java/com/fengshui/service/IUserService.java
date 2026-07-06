@@ -10,4 +10,7 @@ public interface IUserService {
     boolean update(User user);
     boolean delete(int id);
     User login(String username, String password);
+
+    // New method for Dashboard
+    int countAllUsers();
 }

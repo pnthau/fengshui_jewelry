@@ -5,6 +5,7 @@ import com.fengshui.entity.Order;
 import com.fengshui.entity.OrderItem;
 
 import java.util.List;
+import java.util.Map;
 
 public interface IOrderService {
     List<Order> findAll();
@@ -20,4 +21,9 @@ public interface IOrderService {
     List<OrderItem> findItemsByOrderID(int orderId);
 
     boolean delete(int id);
+
+    // New methods for Dashboard (re-added)
+    double getTotalRevenue();
+    int countNewOrders();
+    Map<String, Double> getMonthlyRevenue();
 }

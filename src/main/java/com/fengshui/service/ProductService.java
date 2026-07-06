@@ -7,9 +7,9 @@ import com.fengshui.repository.ProductRepository;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Set;
 
 public class ProductService implements IProductService {
-    // Tham chiếu tới Interface của Repository theo nguyên lý Dependency Inversion
     private final IProductRepository productRepository;
 
     public ProductService() {
@@ -28,8 +28,7 @@ public class ProductService implements IProductService {
 
     @Override
     public boolean save(Product product) {
-        // return productRepository.save(product);
-        return productRepository.saveWithElements(product);
+        return productRepository.save(product);
     }
 
     @Override
@@ -39,8 +38,7 @@ public class ProductService implements IProductService {
 
     @Override
     public boolean update(Product product) {
-        // return productRepository.update(product);
-        return productRepository.updateWithElements(product);
+        return productRepository.update(product);
     }
 
     @Override
@@ -51,5 +49,22 @@ public class ProductService implements IProductService {
     @Override
     public List<Product> findByElement(String element) {
         return productRepository.findByElement(element);
+    }
+
+    // New method for Dashboard
+    @Override
+    public int countLowStockProducts(int threshold) {
+        return productRepository.countProductsBelowQuantity(threshold);
+    }
+
+    // Triển khai các phương thức mới
+    @Override
+    public boolean saveWithElements(Product product) {
+        return productRepository.saveWithElements(product);
+    }
+
+    @Override
+    public boolean updateWithElements(Product product) {
+        return productRepository.updateWithElements(product);
     }
 }

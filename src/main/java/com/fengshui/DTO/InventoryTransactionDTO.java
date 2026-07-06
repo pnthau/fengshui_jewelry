@@ -1,6 +1,7 @@
-package com.fengshui.entity;
+package com.fengshui.DTO;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -10,14 +11,18 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class InventoryTransaction {
+@Builder
+public class InventoryTransactionDTO {
     private int id;
     private int productId;
-    private String transactionType; // 'IMPORT' or 'EXPORT'
+    private String productName;
+    private String imageURL;
+    private String transactionType;
     private int quantity;
     private BigDecimal price;
     private String reason;
     private LocalDateTime createdAt;
-    private int createdBy; // Links to User ID (Admin)
-    private String status; // 'COMPLETED' or 'VOIDED'
+    private int adminId;
+    private String status;
+
 }

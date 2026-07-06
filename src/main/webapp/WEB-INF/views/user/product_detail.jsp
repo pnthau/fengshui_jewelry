@@ -334,6 +334,8 @@
 
 <!-- Bootstrap JS for Tabs and Interactions -->
 <script src="${pageContext.request.contextPath}/assets/js/bootstrap.bundle.min.js"></script>
+<!-- Toast Utility -->
+<script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 <!-- Cart Logic -->
 <script src="${pageContext.request.contextPath}/assets/js/cart.js"></script>
 </body>

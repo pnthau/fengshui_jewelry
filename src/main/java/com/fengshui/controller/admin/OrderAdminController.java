@@ -2,6 +2,7 @@ package com.fengshui.controller.admin;
 
 import com.fengshui.entity.Order;
 import com.fengshui.entity.OrderItem;
+import com.fengshui.enums.OrderStatus;
 import com.fengshui.service.IOrderService;
 import com.fengshui.service.OrderService;
 import jakarta.servlet.ServletException;
@@ -9,6 +10,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -46,6 +48,9 @@ public class OrderAdminController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8"); // Đảm bảo response cũng được mã hóa UTF-8
+        response.setContentType("text/html;charset=UTF-8"); // Đảm bảo response cũng được mã hóa UTF-8
+
         String action = request.getParameter("action");
 
         if (action == null) {
@@ -74,7 +79,9 @@ public class OrderAdminController extends HttpServlet {
             throws ServletException, IOException {
         List<Order> orders = orderService.findAll();
         request.setAttribute("orders", orders);
-        request.getRequestDispatcher("/WEB-INF/views/admin/order_list.jsp").forward(request, response);
+        request.setAttribute("title", "Quản lý đơn hàng");
+        request.setAttribute("contentPage", "/WEB-INF/views/admin/order_list.jsp");
+        request.getRequestDispatcher("/WEB-INF/views/admin/admin_layout.jsp").forward(request, response);
     }
 
     /**
@@ -97,12 +104,13 @@ public class OrderAdminController extends HttpServlet {
                 return;
             }
 
-            // Sử dụng chính phương thức của OrderService như bạn đã chỉ ra
             List<OrderItem> items = orderService.findItemsByOrderID(orderId);
 
             request.setAttribute("order", order);
             request.setAttribute("items", items);
-            request.getRequestDispatcher("/WEB-INF/views/admin/order_list.jsp").forward(request, response);
+            request.setAttribute("title", "Chi tiết đơn hàng");
+            request.setAttribute("contentPage", "/WEB-INF/views/admin/order_details.jsp");
+            request.getRequestDispatcher("/WEB-INF/views/admin/admin_layout.jsp").forward(request, response);
         } catch (NumberFormatException e) {
             response.sendRedirect(request.getContextPath() + "/admin/orders?action=" + ACTION_LIST);
         }
@@ -113,25 +121,34 @@ public class OrderAdminController extends HttpServlet {
      */
     private void handleUpdateStatus(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
+        String idParam = request.getParameter("id");
+        String status = request.getParameter("status");
 
-            String idParam = request.getParameter("id");
-            String status = request.getParameter("status");
-
-            if (idParam == null || idParam.trim().isEmpty()) {
-                response.sendRedirect(request.getContextPath() + "/admin/orders?action=" + ACTION_LIST);
-                return;
-            }
+        if (idParam == null || idParam.trim().isEmpty()) {
+            response.sendRedirect(request.getContextPath() + "/admin/orders?action=" + ACTION_LIST);
+            return;
+        }
         try {
+            OrderStatus enumStatus = OrderStatus.fromString(status);
+
             int id = Integer.parseInt(idParam);
-            orderService.updateStatus(id, status);
-            response.sendRedirect(request.getContextPath() + "/admin/orders?action=details&id=" + id);
+            orderService.updateStatus(id, enumStatus.name());
+            response.sendRedirect(request.getContextPath() + "/admin/orders?action=details&id=" + id + "&success=1");
         } catch (NumberFormatException e) {
             response.sendRedirect(request.getContextPath() + "/admin/orders?action=" + ACTION_LIST);
         } catch (RuntimeException e) {
-            request.setAttribute("error", e.getMessage());
-            request.setAttribute("orderId", idParam);
+            String errorMessage = e.getMessage();
 
-            request.getRequestDispatcher("/WEB-INF/views/admin/order_list.jsp").forward(request, response);
+            int id = Integer.parseInt(idParam);
+            Order order = orderService.findByID(id);
+            List<OrderItem> items = orderService.findItemsByOrderID(id);
+
+            request.setAttribute("order", order);
+            request.setAttribute("items", items);
+            request.setAttribute("error", errorMessage);
+            request.setAttribute("title", "Chi tiết đơn hàng");
+            request.setAttribute("contentPage", "/WEB-INF/views/admin/order_details.jsp");
+            request.getRequestDispatcher("/WEB-INF/views/admin/admin_layout.jsp").forward(request, response);
         }
     }
 
@@ -148,7 +165,6 @@ public class OrderAdminController extends HttpServlet {
             }
 
             int id = Integer.parseInt(idParam);
-            // Cần bổ sung phương thức delete() trong interface và Service nếu bạn muốn dùng
             orderService.delete(id);
             response.sendRedirect(request.getContextPath() + "/admin/orders?action=" + ACTION_LIST);
         } catch (NumberFormatException e) {
