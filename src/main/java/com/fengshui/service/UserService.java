@@ -47,4 +47,10 @@ public class UserService implements IUserService {
         }
         return null;
     }
+
+    // New method for Dashboard
+    @Override
+    public int countAllUsers() {
+        return userRepository.countAllUsers();
+    }
 }

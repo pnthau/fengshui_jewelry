@@ -1,12 +1,18 @@
 package com.fengshui.controller.admin;
 
+import com.fengshui.entity.InventoryTransaction;
+import com.cloudinary.utils.ObjectUtils;
 import com.fengshui.entity.Product;
+import com.fengshui.service.InventoryTransactionService;
 import com.fengshui.service.ProductService;
+import com.fengshui.util.CloudinaryConfig;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -15,15 +21,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.servlet.annotation.MultipartConfig;
-import jakarta.servlet.http.Part;
-import com.fengshui.util.CloudinaryConfig;
-import com.cloudinary.utils.ObjectUtils;
-
 @WebServlet("/admin/products")
-@MultipartConfig(maxFileSize = 10485760, maxRequestSize = 20971520)
+@MultipartConfig(maxFileSize = 10485760, maxRequestSize = 20971520) // Giữ lại từ nhánh image-video
 public class ProductAdminController extends HttpServlet {
     private final ProductService productService = new ProductService();
+    private final InventoryTransactionService inventoryTransactionService = new InventoryTransactionService();
 
     // Khai báo các hằng số hành động rõ ràng (Tránh lỗi gõ sai chính tả - Anti-typo)
     private static final String ACTION_LIST = "list";
@@ -91,6 +93,7 @@ public class ProductAdminController extends HttpServlet {
 
     // --- CÁC HÀM TRỢ GIÚP CHI TIẾT (HELPER METHODS) ---
 
+
     /**
      * Hiển thị danh sách toàn bộ trang sức phong thủy hiện có (GET)
      */
@@ -98,7 +101,9 @@ public class ProductAdminController extends HttpServlet {
             throws ServletException, IOException {
         List<Product> products = productService.findAll();
         request.setAttribute("products", products);
-        request.getRequestDispatcher("/WEB-INF/views/admin/product_list.jsp").forward(request, response);
+        request.setAttribute("title", "Quản lý sản phẩm");
+        request.setAttribute("contentPage", "/WEB-INF/views/admin/product_list.jsp");
+        request.getRequestDispatcher("/WEB-INF/views/admin/admin_layout.jsp").forward(request, response);
     }
 
     /**
@@ -106,7 +111,9 @@ public class ProductAdminController extends HttpServlet {
      */
     private void handleCreate(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.getRequestDispatcher("/WEB-INF/views/admin/product_form.jsp").forward(request, response);
+        request.setAttribute("title", "Thêm sản phẩm mới");
+        request.setAttribute("contentPage", "/WEB-INF/views/admin/product_form.jsp");
+        request.getRequestDispatcher("/WEB-INF/views/admin/admin_layout.jsp").forward(request, response);
     }
 
     /**
@@ -131,7 +138,9 @@ public class ProductAdminController extends HttpServlet {
 
             request.setAttribute("product", p);
             request.setAttribute("productElements", p.getElements());
-            request.getRequestDispatcher("/WEB-INF/views/admin/product_form.jsp").forward(request, response);
+            request.setAttribute("title", "Chỉnh sửa sản phẩm");
+            request.setAttribute("contentPage", "/WEB-INF/views/admin/product_form.jsp");
+            request.getRequestDispatcher("/WEB-INF/views/admin/admin_layout.jsp").forward(request, response);
         } catch (NumberFormatException e) {
             // Ngăn chặn lỗi sập luồng 500 khi ID truyền vào là chuỗi không hợp lệ
             response.sendRedirect(request.getContextPath() + "/admin/products?action=" + ACTION_LIST);
@@ -166,9 +175,74 @@ public class ProductAdminController extends HttpServlet {
         Product p = mapRequestToProduct(request);
 
         if (ACTION_ADD.equals(action)) {
-            productService.save(p);
+            // Bước 1: Khởi tạo sản phẩm mới với tồn kho bằng 0 để đảm bảo tính minh bạch
+            p.setQuantity(0);
+            p.setStatus("Còn hàng"); // Trạng thái mặc định hoặc dựa trên trigger
+
+            boolean productSaved = productService.saveWithElements(p); // Sử dụng saveWithElements
+
+            if (productSaved && p.getId() > 0) {
+                // Đọc thông tin nhập sỉ ban đầu nếu có từ Form (giá sỉ và số lượng sỉ)
+                String initialQtyStr = request.getParameter("initialQuantity");
+                String costPriceStr = request.getParameter("costPrice");
+
+                if (initialQtyStr != null && !initialQtyStr.trim().isEmpty() &&
+                        costPriceStr != null && !costPriceStr.trim().isEmpty()) {
+
+                    try {
+                        int initialQty = Integer.parseInt(initialQtyStr);
+                        BigDecimal costPrice = new BigDecimal(costPriceStr);
+
+                        if (initialQty > 0 && costPrice.compareTo(BigDecimal.ZERO) > 0) {
+                            // Bước 2: Tạo ngay một phiếu nhập kho ban đầu bọc trong Transaction để hợp thức hóa tồn kho sỉ
+                            InventoryTransaction tx = new InventoryTransaction();
+                            tx.setProductId(p.getId());
+                            tx.setTransactionType("IMPORT");
+                            tx.setQuantity(initialQty);
+                            tx.setPrice(costPrice);
+                            tx.setReason("Nhập hàng ban đầu khi đăng ký sản phẩm mới");
+                            tx.setCreatedBy(1); // Mặc định Admin ID tạm thời là 1
+
+                            inventoryTransactionService.executeStockTransaction(tx);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        // Ghi nhận lỗi nhập kho nhưng không làm gãy luồng tạo thông tin sản phẩm
+                        request.setAttribute("error", "Lỗi khi tạo giao dịch nhập kho ban đầu: " + e.getMessage());
+                        request.setAttribute("product", p); // Giữ lại dữ liệu đã nhập
+                        request.setAttribute("productElements", p.getElements());
+                        request.setAttribute("title", "Thêm sản phẩm mới");
+                        request.setAttribute("contentPage", "/WEB-INF/views/admin/product_form.jsp");
+                        request.getRequestDispatcher("/WEB-INF/views/admin/admin_layout.jsp").forward(request, response);
+                        return;
+                    }
+                }
+            } else {
+                request.setAttribute("error", "Lỗi khi lưu sản phẩm mới vào cơ sở dữ liệu.");
+                request.setAttribute("product", p); // Giữ lại dữ liệu đã nhập
+                request.setAttribute("productElements", p.getElements());
+                request.setAttribute("title", "Thêm sản phẩm mới");
+                request.setAttribute("contentPage", "/WEB-INF/views/admin/product_form.jsp");
+                request.getRequestDispatcher("/WEB-INF/views/admin/admin_layout.jsp").forward(request, response);
+                return;
+            }
         } else if (ACTION_UPDATE.equals(action)) {
-            productService.update(p);
+            // Khóa cứng việc can thiệp trực tiếp số lượng và trạng thái tại Form chỉnh sửa
+            Product oldProduct = productService.findByID(p.getId());
+            if (oldProduct != null) {
+                p.setQuantity(oldProduct.getQuantity());
+                p.setStatus(oldProduct.getStatus());
+            }
+            boolean productUpdated = productService.updateWithElements(p); // Sử dụng updateWithElements
+            if (!productUpdated) {
+                request.setAttribute("error", "Lỗi khi cập nhật sản phẩm vào cơ sở dữ liệu.");
+                request.setAttribute("product", p); // Giữ lại dữ liệu đã nhập
+                request.setAttribute("productElements", p.getElements());
+                request.setAttribute("title", "Chỉnh sửa sản phẩm");
+                request.setAttribute("contentPage", "/WEB-INF/views/admin/product_form.jsp");
+                request.getRequestDispatcher("/WEB-INF/views/admin/admin_layout.jsp").forward(request, response);
+                return;
+            }
         }
 
         response.sendRedirect(request.getContextPath() + "/admin/products?action=" + ACTION_LIST);
@@ -198,25 +272,36 @@ public class ProductAdminController extends HttpServlet {
         p.setPrice((priceStr != null && !priceStr.isEmpty()) ? new BigDecimal(priceStr) : BigDecimal.ZERO);
 
         // 4. Số lượng tồn kho (Xử lý an toàn)
-        String qtyStr = request.getParameter("quantity");
-        p.setQuantity((qtyStr != null && !qtyStr.isEmpty()) ? Integer.parseInt(qtyStr) : 0);
+        // Luôn đặt là 0 khi map từ request, logic quản lý số lượng sẽ nằm ở InventoryTransactionService
+        p.setQuantity(0);
 
         // 5. Chất liệu chế tác (Cung cấp giá trị mặc định nếu để trống)
         String material = request.getParameter("material");
         p.setMaterial((material != null && !material.trim().isEmpty()) ? material : "Chưa xác định");
 
         // 6. Các thông tin mô tả và hình ảnh
-        String finalImageUrl = request.getParameter("imageUrl");
-        Part filePart = request.getPart("imageFile");
-        byte[] imageBytes = filePart.getInputStream().readAllBytes();
+        String finalImageUrl = null; // Khởi tạo là null để đảm bảo không có giá trị cũ nếu bị xóa
 
-        if (filePart != null && filePart.getSize() > 0) {
+        Part filePart = request.getPart("imageFile"); // Lấy file mới được upload
+        boolean newFileUploaded = (filePart != null && filePart.getSize() > 0 && filePart.getSubmittedFileName() != null && !filePart.getSubmittedFileName().isEmpty());
+
+        if (newFileUploaded) {
+            byte[] imageBytes = filePart.getInputStream().readAllBytes();
             // Có upload file mới -> Đẩy lên Cloudinary vào thư mục cụ thể
             Map uploadResult = CloudinaryConfig.getInstance().uploader().upload(
                     imageBytes,
                     ObjectUtils.asMap("folder", "fengshui_products")
             );
             finalImageUrl = uploadResult.get("secure_url").toString();
+        } else {
+            // Nếu không có file mới được upload, kiểm tra xem có yêu cầu xóa ảnh cũ không
+            String deleteCurrentImage = request.getParameter("deleteCurrentImage");
+            if ("true".equals(deleteCurrentImage)) {
+                finalImageUrl = null; // Đặt ảnh thành null nếu có yêu cầu xóa
+            } else {
+                // Nếu không có file mới và không yêu cầu xóa, giữ lại URL ảnh cũ từ existingImageUrl
+                finalImageUrl = request.getParameter("existingImageUrl");
+            }
         }
 
         p.setImageURL(finalImageUrl);

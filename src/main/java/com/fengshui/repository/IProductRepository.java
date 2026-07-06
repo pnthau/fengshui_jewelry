@@ -1,12 +1,10 @@
 package com.fengshui.repository;
 
-import com.fengshui.entity.Order;
 import com.fengshui.entity.Product;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Set;
 
 public interface IProductRepository {
     List<Product> findAll();
@@ -22,7 +20,6 @@ public interface IProductRepository {
     List<Product> findByElement(String element);
 
     List<Product> searchByName(String name);
-    //boolean reduceStock(Connection connection, int productId, int quantity);
 
     void deleteElements(Connection conn, int productId) throws SQLException;
     void addElements(Connection conn, int productId, String element) throws SQLException;
@@ -34,4 +31,8 @@ public interface IProductRepository {
     boolean save(Connection connection, Product product) throws java.sql.SQLException;
     boolean saveWithElements(Product product);
     boolean updateWithElements(Product product);
+    boolean increaseStock(Connection connection, int productId, int quantity);
+
+    // New method for Dashboard
+    int countProductsBelowQuantity(int quantity);
 }
