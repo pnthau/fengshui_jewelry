@@ -11,6 +11,7 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
+
 repositories {
     mavenCentral()
 }
@@ -44,6 +45,9 @@ dependencies {
 
     // Jackson from Object to JSON
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+
+    // Cloudinary SDK cho chức năng Upload File
+    implementation 'com.cloudinary:cloudinary-http44:1.36.0'
 }
 
 

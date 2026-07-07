@@ -18,7 +18,7 @@
         </script>
       </c:if>
 
-      <form action="${pageContext.request.contextPath}/admin/products" method="POST">
+      <form action="${pageContext.request.contextPath}/admin/products" method="POST" enctype="multipart/form-data"> <%-- Đã thêm enctype --%>
         <input type="hidden" name="action" value="${product == null ? 'add' : 'update'}">
         <c:if test="${product != null}">
           <input type="hidden" name="id" value="${product.id}">
@@ -63,7 +63,7 @@
         <!-- Phần chọn Mệnh -->
         <div class="mb-3">
           <label class="form-label d-block">Mệnh hợp (Chọn nhiều):</label>
-          <div class="form-fieldset"> <%-- Sử dụng form-fieldset của Tabler --%>
+          <div class="form-fieldset">
             <c:set var="allElements" value="${['KIM', 'MOC', 'THUY', 'HOA', 'THO']}" />
             <c:forEach var="el" items="${allElements}">
               <div class="form-check form-check-inline">
@@ -76,8 +76,26 @@
         </div>
 
         <div class="mb-3">
-          <label class="form-label">Link hình ảnh</label>
-          <input type="text" name="imageUrl" class="form-control" value="${product.imageURL}">
+          <label class="form-label">Tải lên ảnh sản phẩm</label>
+          <input type="file" name="imageFile" class="form-control" accept="image/*">
+          <!-- Giữ lại URL cũ trong ô ẩn để nếu người dùng không up ảnh mới thì không bị mất ảnh cũ -->
+          <input type="hidden" name="existingImageUrl" value="${product.imageURL}">
+          <c:if test="${product != null && not empty product.imageURL}">
+            <div class="mt-2 d-flex align-items-center">
+              <img src="${pageContext.request.contextPath}/${product.imageURL}" alt="Current Image" style="max-height: 100px; border-radius: 5px;" class="me-3" />
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="deleteCurrentImage" value="true" id="deleteCurrentImage">
+                <label class="form-check-label text-danger" for="deleteCurrentImage">
+                  Xóa ảnh hiện tại
+                </label>
+              </div>
+            </div>
+          </c:if>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Link YouTube</label>
+          <input type="text" name="youtubeUrl" class="form-control" value="${product.youtubeURL}">
         </div>
 
         <div class="mb-3">

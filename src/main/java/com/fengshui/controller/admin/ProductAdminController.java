@@ -1,22 +1,28 @@
 package com.fengshui.controller.admin;
 
 import com.fengshui.entity.InventoryTransaction;
+import com.cloudinary.utils.ObjectUtils;
 import com.fengshui.entity.Product;
 import com.fengshui.service.InventoryTransactionService;
 import com.fengshui.service.ProductService;
+import com.fengshui.util.CloudinaryConfig;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 @WebServlet("/admin/products")
+@MultipartConfig(maxFileSize = 10485760, maxRequestSize = 20971520) // Giữ lại từ nhánh image-video
 public class ProductAdminController extends HttpServlet {
     private final ProductService productService = new ProductService();
     private final InventoryTransactionService inventoryTransactionService = new InventoryTransactionService();
@@ -86,6 +92,7 @@ public class ProductAdminController extends HttpServlet {
     }
 
     // --- CÁC HÀM TRỢ GIÚP CHI TIẾT (HELPER METHODS) ---
+
 
     /**
      * Hiển thị danh sách toàn bộ trang sức phong thủy hiện có (GET)
@@ -164,7 +171,7 @@ public class ProductAdminController extends HttpServlet {
      * Xử lý lưu (Thêm mới/Cập nhật) sản phẩm phong thủy (POST)
      */
     private void handleSaveProduct(HttpServletRequest request, HttpServletResponse response, String action)
-            throws IOException, ServletException { // Thêm ServletException
+            throws IOException, ServletException {
         Product p = mapRequestToProduct(request);
 
         if (ACTION_ADD.equals(action)) {
@@ -244,7 +251,7 @@ public class ProductAdminController extends HttpServlet {
     /**
      * Ánh xạ thông tin an toàn từ Form Request sang đối tượng thực thể Product
      */
-    private Product mapRequestToProduct(HttpServletRequest request) {
+    private Product mapRequestToProduct(HttpServletRequest request) throws ServletException, IOException {
         Product p = new Product();
 
         // 1. Ánh xạ ID sản phẩm (Chỉ áp dụng cho trường hợp chỉnh sửa thông tin)
@@ -253,7 +260,6 @@ public class ProductAdminController extends HttpServlet {
             try {
                 p.setId(Integer.parseInt(idStr));
             } catch (NumberFormatException e) {
-                // Đóng vai trò phòng thủ bổ trợ cho dữ liệu đầu vào
                 p.setId(0);
             }
         }
@@ -273,8 +279,36 @@ public class ProductAdminController extends HttpServlet {
         String material = request.getParameter("material");
         p.setMaterial((material != null && !material.trim().isEmpty()) ? material : "Chưa xác định");
 
-        // 6. Các thông tin mô tả và hình ảnh khác
-        p.setImageURL(request.getParameter("imageUrl"));
+        // 6. Các thông tin mô tả và hình ảnh
+        String finalImageUrl = null; // Khởi tạo là null để đảm bảo không có giá trị cũ nếu bị xóa
+
+        Part filePart = request.getPart("imageFile"); // Lấy file mới được upload
+        boolean newFileUploaded = (filePart != null && filePart.getSize() > 0 && filePart.getSubmittedFileName() != null && !filePart.getSubmittedFileName().isEmpty());
+
+        if (newFileUploaded) {
+            byte[] imageBytes = filePart.getInputStream().readAllBytes();
+            // Có upload file mới -> Đẩy lên Cloudinary vào thư mục cụ thể
+            Map uploadResult = CloudinaryConfig.getInstance().uploader().upload(
+                    imageBytes,
+                    ObjectUtils.asMap("folder", "fengshui_products")
+            );
+            finalImageUrl = uploadResult.get("secure_url").toString();
+        } else {
+            // Nếu không có file mới được upload, kiểm tra xem có yêu cầu xóa ảnh cũ không
+            String deleteCurrentImage = request.getParameter("deleteCurrentImage");
+            if ("true".equals(deleteCurrentImage)) {
+                finalImageUrl = null; // Đặt ảnh thành null nếu có yêu cầu xóa
+            } else {
+                // Nếu không có file mới và không yêu cầu xóa, giữ lại URL ảnh cũ từ existingImageUrl
+                finalImageUrl = request.getParameter("existingImageUrl");
+            }
+        }
+
+        p.setImageURL(finalImageUrl);
+
+        String rawUrl = request.getParameter("youtubeUrl");
+        p.setYoutubeURL(rawUrl);
+
         p.setDescription(request.getParameter("description"));
 
         // 7. Xử lý lưu các hệ mệnh ngũ hành hợp tương thích
