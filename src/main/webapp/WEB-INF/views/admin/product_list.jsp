@@ -31,7 +31,8 @@
                             <td>${p.id}</td>
                             <td>${p.name}</td>
                             <td>
-                                <span class="avatar avatar-sm" style="background-image: url(${pageContext.request.contextPath}/${p.imageURL}); background-size: cover; background-position: center;"
+                                <%-- Sửa URL hình ảnh: bỏ ${pageContext.request.contextPath} --%>
+                                <span class="avatar avatar-sm" style="background-image: url(${p.imageURL}); background-size: cover; background-position: center;"
                                       onerror="this.style.backgroundImage='url(https://via.placeholder.com/40x40?text=No+Image)'"></span>
                             </td>
                             <td><fmt:formatNumber value="${p.price}" type="number" maxFractionDigits="0"/> VNĐ</td>

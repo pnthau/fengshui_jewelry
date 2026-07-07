@@ -67,6 +67,7 @@
                 <table class="table table-vcenter card-table">
                     <thead>
                     <tr>
+                        <th>Hình ảnh</th> <%-- Thêm cột Hình ảnh --%>
                         <th>Tên sản phẩm</th>
                         <th>Số lượng</th>
                         <th>Giá mua</th>
@@ -75,6 +76,10 @@
                     <tbody>
                     <c:forEach var="item" items="${items}">
                         <tr>
+                            <td> <%-- Hiển thị hình ảnh sản phẩm --%>
+                                <span class="avatar avatar-sm" style="background-image: url(${item.imageURL}); background-size: cover; background-position: center;"
+                                      onerror="this.style.backgroundImage='url(https://via.placeholder.com/40x40?text=No+Image)'"></span>
+                            </td>
                             <td class="fw-bold text-dark">
                                 <c:choose>
                                     <c:when test="${not empty item.productName}">

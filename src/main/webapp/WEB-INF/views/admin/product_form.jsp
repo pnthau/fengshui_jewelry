@@ -18,7 +18,7 @@
         </script>
       </c:if>
 
-      <form action="${pageContext.request.contextPath}/admin/products" method="POST" enctype="multipart/form-data"> <%-- Đã thêm enctype --%>
+      <form action="${pageContext.request.contextPath}/admin/products" method="POST" enctype="multipart/form-data">
         <input type="hidden" name="action" value="${product == null ? 'add' : 'update'}">
         <c:if test="${product != null}">
           <input type="hidden" name="id" value="${product.id}">
@@ -82,7 +82,8 @@
           <input type="hidden" name="existingImageUrl" value="${product.imageURL}">
           <c:if test="${product != null && not empty product.imageURL}">
             <div class="mt-2 d-flex align-items-center">
-              <img src="${pageContext.request.contextPath}/${product.imageURL}" alt="Current Image" style="max-height: 100px; border-radius: 5px;" class="me-3" />
+              <%-- Sửa URL hình ảnh: bỏ ${pageContext.request.contextPath} --%>
+              <img src="${product.imageURL}" alt="Current Image" style="max-height: 100px; border-radius: 5px;" class="me-3" />
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" name="deleteCurrentImage" value="true" id="deleteCurrentImage">
                 <label class="form-check-label text-danger" for="deleteCurrentImage">

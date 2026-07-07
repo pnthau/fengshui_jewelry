@@ -109,7 +109,8 @@
                             <td>${tx.id}</td>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <span class="avatar me-3 rounded" style="background-image: url(${pageContext.request.contextPath}/${tx.imageURL}); background-size: cover; background-position: center;"
+                                    <%-- Sửa URL hình ảnh: bỏ ${pageContext.request.contextPath} --%>
+                                    <span class="avatar me-3 rounded" style="background-image: url(${tx.imageURL}); background-size: cover; background-position: center;"
                                           onerror="this.style.backgroundImage='url(https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=200&auto=format&fit=crop)'"></span>
                                     <div>
                                         <div class="text-truncate">${tx.productName}</div>
