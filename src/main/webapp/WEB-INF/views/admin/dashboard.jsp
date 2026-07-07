@@ -2,54 +2,102 @@
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
 
-<div class="container-fluid">
-    <h1 class="mt-4 mb-4">Admin Dashboard</h1>
+<div class="container-xl">
+    <div class="page-header d-print-none">
+        <div class="row align-items-center">
+            <div class="col">
+                <h2 class="page-title">
+                    Dashboard
+                </h2>
+            </div>
+        </div>
+    </div>
 
-    <div class="row">
-        <div class="col-md-3">
-            <div class="card text-white bg-primary mb-3">
-                <div class="card-header">Doanh thu</div>
+    <div class="row row-cards">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-sm">
                 <div class="card-body">
-                    <h5 class="card-title">
-                        <fmt:formatNumber value="${dashboardData.totalRevenue}" type="currency" currencySymbol="VNĐ" maxFractionDigits="0"/>
-                    </h5>
-                    <p class="card-text">Tổng doanh thu thành công</p>
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <span class="bg-primary text-white avatar">
+                                <i class="ti ti-currency-dollar"></i>
+                            </span>
+                        </div>
+                        <div class="col">
+                            <div class="font-weight-medium">
+                                <fmt:formatNumber value="${dashboardData.totalRevenue}" type="currency" currencySymbol="VNĐ" maxFractionDigits="0"/>
+                            </div>
+                            <div class="text-muted">Tổng doanh thu</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-success mb-3">
-                <div class="card-header">Đơn hàng mới</div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-sm">
                 <div class="card-body">
-                    <h5 class="card-title">${dashboardData.newOrdersCount}</h5>
-                    <p class="card-text">Số đơn hàng chờ xử lý</p>
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <span class="bg-success text-white avatar">
+                                <i class="ti ti-shopping-cart"></i>
+                            </span>
+                        </div>
+                        <div class="col">
+                            <div class="font-weight-medium">
+                                ${dashboardData.newOrdersCount}
+                            </div>
+                            <div class="text-muted">Đơn hàng mới</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-warning mb-3">
-                <div class="card-header">Sản phẩm sắp hết hàng</div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-sm">
                 <div class="card-body">
-                    <h5 class="card-title">${dashboardData.lowStockProductsCount}</h5>
-                    <p class="card-text">Sản phẩm cần nhập thêm</p>
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <span class="bg-warning text-white avatar">
+                                <i class="ti ti-alert-triangle"></i>
+                            </span>
+                        </div>
+                        <div class="col">
+                            <div class="font-weight-medium">
+                                ${dashboardData.lowStockProductsCount}
+                            </div>
+                            <div class="text-muted">Sản phẩm sắp hết hàng</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-info mb-3">
-                <div class="card-header">Tài khoản khách</div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-sm">
                 <div class="card-body">
-                    <h5 class="card-title">${dashboardData.totalUsersCount}</h5>
-                    <p class="card-text">Tổng số khách hàng</p>
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <span class="bg-info text-white avatar">
+                                <i class="ti ti-users"></i>
+                            </span>
+                        </div>
+                        <div class="col">
+                            <div class="font-weight-medium">
+                                ${dashboardData.totalUsersCount}
+                            </div>
+                            <div class="text-muted">Tổng số khách hàng</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-12">
+    <div class="row mt-4">
+        <div class="col-12">
             <div class="card">
-                <div class="card-header">Biểu đồ biến động doanh số</div>
+                <div class="card-header">
+                    <h3 class="card-title">Biểu đồ biến động doanh số</h3>
+                </div>
                 <div class="card-body">
                     <canvas id="revenueChart"></canvas>
                 </div>

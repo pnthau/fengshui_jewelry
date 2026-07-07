@@ -133,7 +133,8 @@ public class OrderAdminController extends HttpServlet {
 
             int id = Integer.parseInt(idParam);
             orderService.updateStatus(id, enumStatus.name());
-            response.sendRedirect(request.getContextPath() + "/admin/orders?action=details&id=" + id + "&success=1");
+            // Chuyển hướng về trang danh sách đơn hàng sau khi cập nhật thành công
+            response.sendRedirect(request.getContextPath() + "/admin/orders?action=" + ACTION_LIST + "&success=1");
         } catch (NumberFormatException e) {
             response.sendRedirect(request.getContextPath() + "/admin/orders?action=" + ACTION_LIST);
         } catch (RuntimeException e) {

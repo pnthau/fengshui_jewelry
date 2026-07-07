@@ -6,80 +6,229 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><c:out value="${title != null ? title : 'Admin Panel'}" /></title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Tabler Core CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css" rel="stylesheet">
+    <!-- Tabler Icons CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" rel="stylesheet">
+    <!-- Custom Admin CSS -->
     <link href="${pageContext.request.contextPath}/assets/css/admin_style.css" rel="stylesheet">
+    <!-- DataTables CSS (for Bootstrap 5 compatibility) -->
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
 </head>
-<body>
-<div class="d-flex" id="wrapper">
+<body class="layout-fluid">
+<div class="page">
     <!-- Sidebar -->
-    <div class="bg-dark border-right" id="sidebar-wrapper">
-        <div class="sidebar-heading">Fengshui Jewelry Admin</div>
-        <div class="list-group list-group-flush">
-            <a href="${pageContext.request.contextPath}/admin/dashboard" class="list-group-item list-group-item-action bg-dark text-light">
-                <i class="bi bi-speedometer2 me-2"></i>Dashboard
-            </a>
-            <a href="${pageContext.request.contextPath}/admin/products?action=list" class="list-group-item list-group-item-action bg-dark text-light">
-                <i class="bi bi-box-seam me-2"></i>Sản phẩm
-            </a>
-            <a href="${pageContext.request.contextPath}/admin/orders?action=list" class="list-group-item list-group-item-action bg-dark text-light">
-                <i class="bi bi-receipt-cutoff me-2"></i>Đơn hàng
-            </a>
-            <a href="${pageContext.request.contextPath}/admin/inventory?action=list" class="list-group-item list-group-item-action bg-dark text-light">
-                <i class="bi bi-journal-album me-2"></i>Nhật ký kho
-            </a>
-            <a href="#" class="list-group-item list-group-item-action bg-dark text-light">
-                <i class="bi bi-people me-2"></i>Khách hàng
-            </a>
-            <a href="#" class="list-group-item list-group-item-action bg-dark text-light">
-                <i class="bi bi-gear me-2"></i>Cài đặt
-            </a>
-        </div>
-    </div>
-    <!-- /#sidebar-wrapper -->
-
-    <!-- Page Content -->
-    <div id="page-content-wrapper">
-        <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
-            <button class="btn btn-primary" id="sidebarToggle"><i class="bi bi-list"></i></button>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <aside class="navbar navbar-vertical navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu" aria-controls="sidebar-menu" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
-                    <li class="nav-item active">
-                        <a class="nav-link" href="${pageContext.request.contextPath}/admin/dashboard">Home <i class="bi bi-house"></i></a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <c:out value="${sessionScope.currentUser.username}" />
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                            <a class="dropdown-item" href="#">Profile</a>
-                            <a class="dropdown-item" href="#">Settings</a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="${pageContext.request.contextPath}/logout">Logout</a>
+            <h1 class="navbar-brand navbar-brand-autodark">
+                <a href="${pageContext.request.contextPath}/admin/dashboard">
+                    <!-- Thay thế logo.svg bằng văn bản -->
+                    Fengshui Admin
+                </a>
+            </h1>
+            <div class="navbar-nav flex-row d-lg-none">
+                <div class="nav-item dropdown">
+                    <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
+                        <!-- Thay thế 000m.jpg bằng avatar placeholder -->
+                        <span class="avatar avatar-sm bg-blue-lt">
+                            <i class="ti ti-user"></i>
+                        </span>
+                        <div class="d-none d-xl-block ps-2">
+                            <div><c:out value="${sessionScope.currentUser.username}" /></div>
+                            <div class="mt-1 small text-muted">Administrator</div>
                         </div>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                        <a href="#" class="dropdown-item">Profile</a>
+                        <a href="#" class="dropdown-item">Settings</a>
+                        <a href="${pageContext.request.contextPath}/logout" class="dropdown-item">Logout</a>
+                        </div>
+                </div>
+            </div>
+            <div class="collapse navbar-collapse" id="sidebar-menu">
+                <ul class="navbar-nav pt-lg-3">
+                    <li class="nav-item">
+                        <a class="nav-link" href="${pageContext.request.contextPath}/admin/dashboard">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <i class="ti ti-dashboard"></i>
+                            </span>
+                            <span class="nav-link-title">Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="${pageContext.request.contextPath}/admin/products?action=list">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <i class="ti ti-box"></i>
+                            </span>
+                            <span class="nav-link-title">Sản phẩm</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="${pageContext.request.contextPath}/admin/orders?action=list">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <i class="ti ti-receipt-2"></i>
+                            </span>
+                            <span class="nav-link-title">Đơn hàng</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="${pageContext.request.contextPath}/admin/inventory?action=list">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <i class="ti ti-clipboard-list"></i>
+                            </span>
+                            <span class="nav-link-title">Nhật ký kho</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <i class="ti ti-users"></i>
+                            </span>
+                            <span class="nav-link-title">Khách hàng</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <i class="ti ti-settings"></i>
+                            </span>
+                            <span class="nav-link-title">Cài đặt</span>
+                        </a>
                     </li>
                 </ul>
             </div>
-        </nav>
+        </div>
+    </aside>
 
-        <div class="container-fluid p-4">
-            <!-- Content will be injected here -->
-            <jsp:include page="${requestScope.contentPage}" />
+    <div class="page-wrapper">
+        <!-- Navbar -->
+        <header class="navbar navbar-expand-md navbar-light d-print-none">
+            <div class="container-xl">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-nav flex-row order-md-last">
+                    <div class="nav-item dropdown">
+                        <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
+                            <!-- Thay thế 000m.jpg bằng avatar placeholder -->
+                            <span class="avatar avatar-sm bg-blue-lt">
+                                <i class="ti ti-user"></i>
+                            </span>
+                            <div class="d-none d-xl-block ps-2">
+                                <div><c:out value="${sessionScope.currentUser.username}" /></div>
+                                <div class="mt-1 small text-muted">Administrator</div>
+                            </div>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                            <a href="#" class="dropdown-item">Profile</a>
+                            <a href="#" class="dropdown-item">Settings</a>
+                            <a href="${pageContext.request.contextPath}/logout" class="dropdown-item">Logout</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="collapse navbar-collapse" id="navbar-menu">
+                    <!-- Breadcrumbs or other navbar content can go here -->
+                    <ol class="breadcrumb breadcrumb-alt" aria-label="breadcrumbs">
+                        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/admin/dashboard">Home</a></li>
+                        <li class="breadcrumb-item active" aria-current="page"><a href="#"><c:out value="${title != null ? title : 'Dashboard'}" /></a></li>
+                    </ol>
+                </div>
+            </div>
+        </header>
+
+        <div class="page-body">
+            <div class="container-xl">
+                <!-- Content will be injected here -->
+                <jsp:include page="${requestScope.contentPage}" />
+            </div>
+        </div>
+
+        <footer class="footer footer-transparent d-print-none">
+            <div class="container-xl">
+                <div class="row text-center align-items-center flex-row-reverse">
+                    <div class="col-lg-auto ms-lg-auto">
+                        <ul class="list-inline list-inline-dots mb-0">
+                            <li class="list-inline-item"><a href="#" class="link-secondary">Documentation</a></li>
+                            <li class="list-inline-item"><a href="#" class="link-secondary">License</a></li>
+                            <li class="list-inline-item">
+                                <a href="https://github.com/sponsors/codecalm" target="_blank" class="link-secondary" rel="noopener">
+                                    <i class="ti ti-heart text-red"></i>
+                                    Sponsor
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-12 col-lg-auto mt-3 mt-lg-0">
+                        <ul class="list-inline list-inline-dots mb-0">
+                            <li class="list-inline-item">
+                                Copyright &copy; 2023
+                                <a href="." class="link-secondary">CodeGym</a>.
+                                All rights reserved.
+                            </li>
+                            <li class="list-inline-item">
+                                <a href="#" class="link-secondary" rel="noopener">
+                                    v1.0.0
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100">
+    <!-- Toasts will be appended here -->
+</div>
+
+<!-- Custom Confirmation Modal -->
+<div class="modal modal-blur fade" id="confirmationModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-status bg-danger"></div>
+            <div class="modal-body text-center py-4">
+                <i class="ti ti-alert-triangle icon mb-2 text-danger icon-lg"></i>
+                <h3>Bạn có chắc chắn?</h3>
+                <div class="text-muted" id="confirmationModalMessage">Bạn có thực sự muốn xóa mục này không? Dữ liệu đã xóa sẽ không thể phục hồi!</div>
+            </div>
+            <div class="modal-footer">
+                <div class="w-100">
+                    <div class="row">
+                        <div class="col">
+                            <a href="#" class="btn w-100" data-bs-dismiss="modal">
+                                Hủy
+                            </a>
+                        </div>
+                        <div class="col">
+                            <a href="#" class="btn btn-danger w-100" id="confirmActionButton">
+                                Xác nhận
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <!-- /#page-content-wrapper -->
 </div>
-<!-- /#wrapper -->
 
+<!-- Libs JS -->
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Tabler Core JS -->
+<script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
 <!-- DataTables JS -->
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+    // Define contextPath globally for use in JavaScript
+    const contextPath = "${pageContext.request.contextPath}";
+</script>
+<!-- Custom Admin JS -->
 <script src="${pageContext.request.contextPath}/assets/js/admin_common.js"></script>
 </body>
 </html>
