@@ -1,4 +1,5 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 
 <div class="container-fluid">
@@ -14,7 +15,7 @@
         </div>
       </c:if>
 
-      <form action="${pageContext.request.contextPath}/admin/products" method="POST">
+      <form action="${pageContext.request.contextPath}/admin/products" method="POST" enctype="multipart/form-data">
         <input type="hidden" name="action" value="${product == null ? 'add' : 'update'}">
         <c:if test="${product != null}">
           <input type="hidden" name="id" value="${product.id}">
@@ -38,7 +39,7 @@
                 <input type="number" name="initialQuantity" class="form-control" value="0" min="0" required>
               </div>
               <div class="col-md-3 mb-3">
-                <label class="form-label fw-bold">Giá nhập sỉ (VNĐ)</label>
+                <label class="form-label fw-bold">Giá nhập sỉ (VNĐ):</label>
                 <input type="number" name="costPrice" class="form-control" value="0" min="0" required>
               </div>
             </c:when>
@@ -72,8 +73,26 @@
         </div>
 
         <div class="mb-3">
-          <label class="form-label fw-bold">Link hình ảnh</label>
-          <input type="text" name="imageUrl" class="form-control" value="${product.imageURL}">
+          <label class="form-label fw-bold">Tải lên ảnh sản phẩm</label>
+          <input type="file" name="imageFile" class="form-control" accept="image/*">
+          <!-- Giữ lại URL cũ trong ô ẩn để nếu người dùng không up ảnh mới thì không bị mất ảnh cũ -->
+          <input type="hidden" name="existingImageUrl" value="${product.imageURL}">
+          <c:if test="${product != null && not empty product.imageURL}">
+            <div class="mt-2 d-flex align-items-center">
+              <img src="${product.imageURL}" alt="Current Image" style="max-height: 100px; border-radius: 5px;" class="me-3" />
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="deleteCurrentImage" value="true" id="deleteCurrentImage">
+                <label class="form-check-label text-danger" for="deleteCurrentImage">
+                  Xóa ảnh hiện tại
+                </label>
+              </div>
+            </div>
+          </c:if>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold">Link YouTube</label>
+          <input type="text" name="youtubeUrl" class="form-control" value="${product.youtubeURL}">
         </div>
 
         <div class="mb-3">

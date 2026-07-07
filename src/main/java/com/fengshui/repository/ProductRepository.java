@@ -10,7 +10,7 @@ import java.util.Set;
 
 public class ProductRepository extends BaseRepository implements IProductRepository {
     private static final String SELECT_ALL_PRODUCTS = "SELECT * FROM products ORDER BY id DESC";
-    private static final String SELECT_PRODUCT_BY_ID = "SELECT * FROM products WHERE id = ?";
+    private static final String SELECT_PRODUCT_BY_ID = "SELECT p.* FROM products p WHERE id = ?";
     private static final String SELECT_ALL_PRODUCTS_ELEMENT = "SELECT p.*, pe.element FROM products p JOIN product_elements pe ON p.id = pe.product_id WHERE pe.element = ?";
     private static final String SELECT_PRODUCT_BY_NAME = "SELECT * FROM products WHERE name LIKE ? ORDER BY id DESC";
     private static final String INSERT_PRODUCT = "INSERT INTO products (name, price, quantity, material, image_url, youtube_url, status, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
