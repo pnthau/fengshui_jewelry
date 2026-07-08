@@ -1,4 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -109,5 +111,59 @@
 
     <!-- Bootstrap 5 Bundle JS -->
     <script src="${pageContext.request.contextPath}/assets/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Modal Thông Báo Thanh Toán -->
+    <c:if test="${not empty sessionScope.paymentStatus}">
+        <div class="modal fade" id="paymentResultModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="border-radius: 12px; overflow: hidden; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                    <div class="modal-header border-0 pb-0 justify-content-center pt-4">
+                        <c:choose>
+                            <c:when test="${sessionScope.paymentStatus == 'success'}">
+                                <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                            </c:when>
+                            <c:otherwise>
+                                <i class="bi bi-x-circle-fill text-danger" style="font-size: 4rem;"></i>
+                            </c:otherwise>
+                        </c:choose>
+                    </div>
+                    <div class="modal-body text-center pt-3 pb-4 px-4">
+                        <h4 class="fw-bold mb-3" style="color: ${sessionScope.paymentStatus == 'success' ? '#198754' : '#dc3545'};">
+                            ${sessionScope.paymentMessage}
+                        </h4>
+                        <c:if test="${not empty sessionScope.vnp_TxnRef}">
+                            <div class="bg-light p-3 rounded text-start mb-3" style="font-size: 0.95rem;">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-secondary">Mã đơn hàng:</span>
+                                    <span class="fw-bold">${sessionScope.vnp_TxnRef}</span>
+                                </div>
+                                <c:if test="${not empty sessionScope.vnp_Amount}">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-secondary">Số tiền:</span>
+                                        <span class="fw-bold text-danger"><fmt:formatNumber value="${sessionScope.vnp_Amount}" type="number" maxFractionDigits="0"/> đ</span>
+                                    </div>
+                                </c:if>
+                            </div>
+                        </c:if>
+                        <button type="button" class="btn btn-gold w-100 py-2 fw-bold" data-bs-dismiss="modal">Đóng cửa sổ</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                var paymentModal = new bootstrap.Modal(document.getElementById('paymentResultModal'));
+                paymentModal.show();
+            });
+        </script>
+
+        <!-- Xóa session để không hiện lại modal khi f5 -->
+        <c:remove var="paymentStatus" scope="session"/>
+        <c:remove var="paymentMessage" scope="session"/>
+        <c:remove var="vnp_TxnRef" scope="session"/>
+        <c:remove var="vnp_Amount" scope="session"/>
+    </c:if>
+
 </body>
 </html>

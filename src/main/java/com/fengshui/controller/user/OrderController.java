@@ -10,9 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 @WebServlet(name = "OrderController", value = "/order")
 public class OrderController extends HttpServlet {
@@ -48,6 +46,8 @@ public class OrderController extends HttpServlet {
             boolean isSuccess = orderService.placeOrderFromCart(order, items);
             session.removeAttribute("cart");
             resp.setStatus(HttpServletResponse.SC_OK);
+            resp.setContentType("application/json");
+            resp.getWriter().print("{\"orderId\":" + order.getId() + ",\"totalPrice\":" + order.getTotalPrice() + "}");
         } catch (RuntimeException ex) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             resp.getWriter().print(ex.getMessage());

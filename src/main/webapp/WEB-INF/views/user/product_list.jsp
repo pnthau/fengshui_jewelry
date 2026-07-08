@@ -395,11 +395,14 @@
                     <span class="text-white me-3" style="font-size: 1.1rem;">Tổng Tiền:</span>
                     <span class="text-warning fw-bold" style="font-size: 1.4rem;" id="cartTotalPrice">0 VNĐ</span>
                 </div>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 flex-wrap">
                     <button type="button" class="btn btn-outline-light px-4 py-2" data-bs-dismiss="modal">Tiếp Tục Mua
                     </button>
                     <button type="button" class="btn btn-gold px-4 py-2 fs-5 fw-bold" onclick="checkoutCart()">Xác Nhận
                         Đặt Hàng
+                    </button>
+                    <button type="button" class="btn btn-info px-4 py-2 fs-5 fw-bold text-white" onclick="checkoutVnpay()" style="background: linear-gradient(135deg, #0066b2, #004080); border: none;">
+                        <i class="bi bi-credit-card-fill me-2"></i>VNPay
                     </button>
                 </div>
             </div>

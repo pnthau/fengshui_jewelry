@@ -5,13 +5,13 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
-public class VnpayConfig {
+public class VnPayConfig {
     public static final String VNP_PAY_URL = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
     public static final String VNP_TMN_CODE = "TXCEZBWB";
     public static final String SECRET_KEY = "YN612MJX83OGPQSHHC66QUBBT0R3M7RG";
     public static final String VNP_VERSION = "2.1.0";
     public static final String VNP_COMMAND = "pay";
-    public static final String VNP_RETURN_URL = "http://localhost:8080/payment/vnpay_return";
+    public static final String VNP_RETURN_URL = "http://localhost:8080/fengshui_jewelry/payment/vnpay_return";
 
     public static String hmacSHA512(final String key, final String data) {
         try {
