@@ -17,9 +17,9 @@ public class OrderRepository extends BaseRepository implements IOrderRepository 
     private static final String INSERT_ORDER = "INSERT INTO orders (customer_name, customer_phone, customer_address, total_price, status, user_id) VALUES (?, ?, ?, ?, ?, ?)";
     private static final String UPDATE_ORDER_STATUS = "UPDATE orders SET status = ? WHERE id = ?";
     private static final String DELETE_ORDER = "DELETE FROM orders WHERE id = ?";
-    private static final String SELECT_TOTAL_REVENUE = "SELECT SUM(total_price) FROM orders WHERE status = 'SUCCESS'";
+    private static final String SELECT_TOTAL_REVENUE = "SELECT SUM(total_price) FROM orders WHERE status = 'DELIVERED'";
     private static final String COUNT_ORDERS_BY_STATUS = "SELECT COUNT(*) FROM orders WHERE status = ?";
-    private static final String SELECT_MONTHLY_REVENUE = "SELECT MONTH(created_at) AS month, SUM(total_price) AS revenue FROM orders WHERE status = 'SUCCESS' AND YEAR(created_at) = YEAR(CURDATE()) GROUP BY MONTH(created_at) ORDER BY MONTH(created_at)";
+    private static final String SELECT_MONTHLY_REVENUE = "SELECT MONTH(created_at) AS month, SUM(total_price) AS revenue FROM orders WHERE status = 'DELIVERED' AND YEAR(created_at) = YEAR(CURDATE()) GROUP BY MONTH(created_at) ORDER BY MONTH(created_at)";
 
 
     @Override

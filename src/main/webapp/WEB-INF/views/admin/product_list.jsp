@@ -2,50 +2,73 @@
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
 <%@ taglib uri="jakarta.tags.fmt" prefix="fmt" %>
 
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
-        <h2>Danh sách sản phẩm</h2>
-        <a href="${pageContext.request.contextPath}/admin/products?action=create" class="btn btn-primary">
-            <i class="bi bi-plus-circle me-1"></i> Thêm sản phẩm mới
-        </a>
+<div class="container-xl">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Danh sách sản phẩm</h3>
+            <div class="card-actions">
+                <a href="${pageContext.request.contextPath}/admin/products?action=create" class="btn btn-primary">
+                    <i class="ti ti-plus me-1"></i> Thêm sản phẩm mới
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="productTable" class="table table-vcenter card-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên</th>
+                        <th>Hình ảnh</th>
+                        <th>Giá</th>
+                        <th>Số lượng</th>
+                        <th class="w-1">Thao tác</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <c:forEach var="p" items="${products}">
+                        <tr>
+                            <td>${p.id}</td>
+                            <td>${p.name}</td>
+                            <td>
+                                <%-- Sửa URL hình ảnh: bỏ ${pageContext.request.contextPath} --%>
+                                <span class="avatar avatar-sm" style="background-image: url(${p.imageURL}); background-size: cover; background-position: center;"
+                                      onerror="this.style.backgroundImage='url(https://via.placeholder.com/40x40?text=No+Image)'"></span>
+                            </td>
+                            <td><fmt:formatNumber value="${p.price}" type="number" maxFractionDigits="0"/> VNĐ</td>
+                            <td>${p.quantity}</td>
+                            <td>
+                                <a href="${pageContext.request.contextPath}/admin/products?action=edit&id=${p.id}" class="btn btn-icon btn-sm btn-warning">
+                                    <i class="ti ti-edit"></i>
+                                </a>
+                                <a href="#" class="btn btn-icon btn-sm btn-danger delete-product-btn"
+                                   data-id="${p.id}"
+                                   data-name="${p.name}">
+                                    <i class="ti ti-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    </c:forEach>
+                    <%-- Đã loại bỏ hoàn toàn khối c:choose/c:otherwise. DataTables sẽ tự động hiển thị thông báo khi không có dữ liệu. --%>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-
-    <table id="productTable" class="table table-bordered table-hover shadow-sm bg-white">
-        <thead class="table-dark">
-        <tr>
-            <th>ID</th>
-            <th>Tên</th>
-            <th>Giá</th>
-            <th>Số lượng</th>
-            <th>Thao tác</th>
-        </tr>
-        </thead>
-        <tbody>
-        <c:forEach var="p" items="${products}">
-            <tr>
-                <td>${p.id}</td>
-                <td>${p.name}</td>
-                <td><fmt:formatNumber value="${p.price}" type="number" maxFractionDigits="0"/> VNĐ</td>
-                <td>${p.quantity}</td>
-                <td>
-                    <a href="${pageContext.request.contextPath}/admin/products?action=edit&id=${p.id}" class="btn btn-warning btn-sm">
-                        <i class="bi bi-pencil-square"></i> Sửa
-                    </a>
-                    <a href="${pageContext.request.contextPath}/admin/products?action=delete&id=${p.id}"
-                       class="btn btn-danger btn-sm"
-                       onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này không?')">
-                        <i class="bi bi-trash"></i> Xóa
-                    </a>
-                </td>
-            </tr>
-        </c:forEach>
-        <c:if test="${empty products}">
-            <tr>
-                <td colspan="5" class="text-center py-4 text-muted">
-                    <i class="bi bi-box-seam fs-1 d-block mb-2"></i> Chưa có sản phẩm nào.
-                </td>
-            </tr>
-        </c:if>
-        </tbody>
-    </table>
 </div>
+
+<script>
+    $(document).ready(function() {
+        $('.delete-product-btn').on('click', function(e) {
+            e.preventDefault();
+            const productId = $(this).data('id');
+            const productName = $(this).data('name');
+            const deleteUrl = `${contextPath}/admin/products?action=delete&id=${productId}`;
+            const message = `Bạn có chắc muốn xóa sản phẩm <strong>${productName}</strong> (ID: ${productId}) không? Dữ liệu đã xóa sẽ không thể phục hồi!`;
+
+            window.showConfirmationModal(message, function() {
+                window.location.href = deleteUrl;
+            });
+        });
+    });
+</script>

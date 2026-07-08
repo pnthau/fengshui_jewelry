@@ -1,10 +1,14 @@
 package com.fengshui.controller.admin;
 
+import com.fengshui.DTO.OrderItemDTO; // Import DTO mới
 import com.fengshui.entity.Order;
 import com.fengshui.entity.OrderItem;
+import com.fengshui.entity.Product; // Import Product entity
 import com.fengshui.enums.OrderStatus;
 import com.fengshui.service.IOrderService;
+import com.fengshui.service.IProductService; // Import ProductService interface
 import com.fengshui.service.OrderService;
+import com.fengshui.service.ProductService; // Import ProductService implementation
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -12,11 +16,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.util.ArrayList; // Import ArrayList
 import java.util.List;
 
 @WebServlet("/admin/orders")
 public class OrderAdminController extends HttpServlet {
     private final IOrderService orderService = new OrderService();
+    private final IProductService productService = new ProductService(); // Inject ProductService
 
     // Định nghĩa các hằng số hành động nhằm tránh lỗi gõ sai chính tả (Anti-typo)
     private static final String ACTION_LIST = "list";
@@ -104,10 +110,25 @@ public class OrderAdminController extends HttpServlet {
                 return;
             }
 
-            List<OrderItem> items = orderService.findItemsByOrderID(orderId);
+            List<OrderItem> orderItems = orderService.findItemsByOrderID(orderId);
+            List<OrderItemDTO> itemDTOs = new ArrayList<>();
+
+            for (OrderItem item : orderItems) {
+                Product product = productService.findByID(item.getProductId());
+                OrderItemDTO dto = new OrderItemDTO(
+                        item.getId(),
+                        item.getOrderId(),
+                        item.getProductId(),
+                        item.getQuantity(),
+                        item.getPriceAtPurchase(),
+                        item.getProductName(),
+                        product != null ? product.getImageURL() : "https://via.placeholder.com/40x40?text=No+Image" // Gán imageURL
+                );
+                itemDTOs.add(dto);
+            }
 
             request.setAttribute("order", order);
-            request.setAttribute("items", items);
+            request.setAttribute("items", itemDTOs); // Truyền List<OrderItemDTO> thay vì List<OrderItem>
             request.setAttribute("title", "Chi tiết đơn hàng");
             request.setAttribute("contentPage", "/WEB-INF/views/admin/order_details.jsp");
             request.getRequestDispatcher("/WEB-INF/views/admin/admin_layout.jsp").forward(request, response);
@@ -133,7 +154,8 @@ public class OrderAdminController extends HttpServlet {
 
             int id = Integer.parseInt(idParam);
             orderService.updateStatus(id, enumStatus.name());
-            response.sendRedirect(request.getContextPath() + "/admin/orders?action=details&id=" + id + "&success=1");
+            // Chuyển hướng về trang danh sách đơn hàng sau khi cập nhật thành công
+            response.sendRedirect(request.getContextPath() + "/admin/orders?action=" + ACTION_LIST + "&success=1");
         } catch (NumberFormatException e) {
             response.sendRedirect(request.getContextPath() + "/admin/orders?action=" + ACTION_LIST);
         } catch (RuntimeException e) {
@@ -141,10 +163,28 @@ public class OrderAdminController extends HttpServlet {
 
             int id = Integer.parseInt(idParam);
             Order order = orderService.findByID(id);
-            List<OrderItem> items = orderService.findItemsByOrderID(id);
+            // Cần lấy lại items dưới dạng DTO để hiển thị lại form với lỗi
+            List<OrderItem> orderItems = orderService.findItemsByOrderID(id);
+            List<OrderItemDTO> itemDTOs = new ArrayList<>();
+            IProductService productService = new ProductService(); // Tạm thời khởi tạo lại để tránh lỗi nếu chưa inject ở đây
+
+            for (OrderItem item : orderItems) {
+                Product product = productService.findByID(item.getProductId());
+                OrderItemDTO dto = new OrderItemDTO(
+                        item.getId(),
+                        item.getOrderId(),
+                        item.getProductId(),
+                        item.getQuantity(),
+                        item.getPriceAtPurchase(),
+                        item.getProductName(),
+                        product != null ? product.getImageURL() : "https://via.placeholder.com/40x40?text=No+Image"
+                );
+                itemDTOs.add(dto);
+            }
+
 
             request.setAttribute("order", order);
-            request.setAttribute("items", items);
+            request.setAttribute("items", itemDTOs); // Truyền List<OrderItemDTO>
             request.setAttribute("error", errorMessage);
             request.setAttribute("title", "Chi tiết đơn hàng");
             request.setAttribute("contentPage", "/WEB-INF/views/admin/order_details.jsp");
