@@ -225,6 +225,19 @@ async function checkoutCart() {
         FengShuiToast.warning('Vui lòng điền đầy đủ thông tin (Họ tên, SĐT, Địa chỉ) để chúng tôi giao hàng!');
         return;
     }
+    if (name.length < 2) {
+        FengShuiToast.warning('Họ tên quá ngắn, vui lòng nhập tên thật!');
+        return;
+    }
+    const phoneRegex = /^(03|05|07|08|09)[0-9]{8}$/;
+    if (!phoneRegex.test(phone)) {
+        FengShuiToast.warning('Số điện thoại không hợp lệ! Vui lòng nhập SĐT Việt Nam (10 số).');
+        return;
+    }
+    if (addr.length < 5) {
+        FengShuiToast.warning('Địa chỉ giao hàng quá ngắn, vui lòng nhập rõ ràng!');
+        return;
+    }
 
     const url = CONTEXT_PATH + "/order";
     const params = new URLSearchParams();
@@ -257,6 +270,85 @@ async function checkoutCart() {
         }
     } catch (error) {
         console.log("Lỗi order:", error);
+        FengShuiToast.error('Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại mạng Wi-Fi của bạn!');
+    }
+}
+
+async function checkoutVnpay() {
+    if (cart.length === 0) {
+        FengShuiToast.warning('Giỏ hàng của bạn đang trống!');
+        return;
+    }
+
+    const name = document.getElementById('cartCustomerName').value.trim();
+    const phone = document.getElementById('cartCustomerPhone').value.trim();
+    const addr = document.getElementById('cartCustomerAddress').value.trim();
+
+    if (!name || !phone || !addr) {
+        FengShuiToast.warning('Vui lòng điền đầy đủ thông tin (Họ tên, SĐT, Địa chỉ) để chúng tôi giao hàng!');
+        return;
+    }
+    if (name.length < 2) {
+        FengShuiToast.warning('Họ tên quá ngắn, vui lòng nhập tên thật!');
+        return;
+    }
+    const phoneRegex = /^(03|05|07|08|09)[0-9]{8}$/;
+    if (!phoneRegex.test(phone)) {
+        FengShuiToast.warning('Số điện thoại không hợp lệ! Vui lòng nhập SĐT Việt Nam (10 số).');
+        return;
+    }
+    if (addr.length < 5) {
+        FengShuiToast.warning('Địa chỉ giao hàng quá ngắn, vui lòng nhập rõ ràng!');
+        return;
+    }
+
+    const url = CONTEXT_PATH + "/order";
+    const params = new URLSearchParams();
+    params.append('customerName', name);
+    params.append('customerPhone', phone);
+    params.append('customerAddress', addr);
+
+    try {
+        const res = await fetch(url, {
+            method: 'post',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: params.toString()
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            const orderId = data.orderId;
+            const totalPrice = data.totalPrice;
+
+            // Tạo form ẩn để POST sang PaymentController
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = CONTEXT_PATH + '/payment/vnpay';
+
+            const inputAmount = document.createElement('input');
+            inputAmount.type = 'hidden';
+            inputAmount.name = 'amount';
+            inputAmount.value = totalPrice;
+            form.appendChild(inputAmount);
+
+            const inputOrderId = document.createElement('input');
+            inputOrderId.type = 'hidden';
+            inputOrderId.name = 'orderId';
+            inputOrderId.value = orderId;
+            form.appendChild(inputOrderId);
+
+            document.body.appendChild(form);
+            form.submit();
+        } else {
+            const errorMessage = await res.text();
+            if (errorMessage && errorMessage.trim() !== "") {
+                FengShuiToast.error(errorMessage);
+            } else {
+                FengShuiToast.error('Đặt hàng thất bại. Vui lòng thử lại!');
+            }
+        }
+    } catch (error) {
+        console.log("Lỗi VNPay:", error);
         FengShuiToast.error('Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại mạng Wi-Fi của bạn!');
     }
 }

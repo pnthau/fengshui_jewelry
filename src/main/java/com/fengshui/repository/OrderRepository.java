@@ -14,7 +14,7 @@ import java.util.Map;
 public class OrderRepository extends BaseRepository implements IOrderRepository {
     private static final String SELECT_ALL_ORDERS = "SELECT * FROM orders ORDER BY created_at DESC";
     private static final String SELECT_ORDER_BY_ID = "SELECT * FROM orders WHERE id = ?";
-    private static final String INSERT_ORDER = "INSERT INTO orders (customer_name, customer_phone, customer_address, total_price, status, user_id) VALUES (?, ?, ?, ?, ?, ?)";
+    private static final String INSERT_ORDER = "INSERT INTO orders (customer_name, customer_phone, customer_address, total_price, status) VALUES (?, ?, ?, ?, ?)";
     private static final String UPDATE_ORDER_STATUS = "UPDATE orders SET status = ? WHERE id = ?";
     private static final String DELETE_ORDER = "DELETE FROM orders WHERE id = ?";
     private static final String SELECT_TOTAL_REVENUE = "SELECT SUM(total_price) FROM orders WHERE status = 'DELIVERED'";
@@ -37,7 +37,6 @@ public class OrderRepository extends BaseRepository implements IOrderRepository 
                 order.setCustomerAddress(resultSet.getString("customer_address"));
                 order.setTotalPrice(resultSet.getBigDecimal("total_price"));
                 order.setStatus(resultSet.getString("status"));
-                order.setUserId(resultSet.getInt("user_id"));
                 Timestamp ts = resultSet.getTimestamp("created_at");
                 if (ts != null) {
                     order.setCreatedAt(ts.toLocalDateTime());
@@ -66,7 +65,6 @@ public class OrderRepository extends BaseRepository implements IOrderRepository 
                     order.setCustomerAddress(resultSet.getString("customer_address"));
                     order.setTotalPrice(resultSet.getBigDecimal("total_price"));
                     order.setStatus(resultSet.getString("status"));
-                    order.setUserId(resultSet.getInt("user_id"));
                     Timestamp ts = resultSet.getTimestamp("created_at");
                     if (ts != null) {
                         order.setCreatedAt(ts.toLocalDateTime());
@@ -90,7 +88,6 @@ public class OrderRepository extends BaseRepository implements IOrderRepository 
             preparedStatement.setString(3, order.getCustomerAddress());
             preparedStatement.setBigDecimal(4, order.getTotalPrice());
             preparedStatement.setString(5, order.getStatus());
-            preparedStatement.setInt(6, order.getUserId());
 
             rowsInserted = preparedStatement.executeUpdate();
             if (rowsInserted > 0) {
@@ -102,6 +99,7 @@ public class OrderRepository extends BaseRepository implements IOrderRepository 
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            throw new RuntimeException("DB Error in save(Order): " + e.getMessage());
         }
         return rowsInserted > 0;
     }
@@ -116,7 +114,6 @@ public class OrderRepository extends BaseRepository implements IOrderRepository 
             preparedStatement.setString(3, order.getCustomerAddress());
             preparedStatement.setBigDecimal(4, order.getTotalPrice());
             preparedStatement.setString(5, order.getStatus());
-            preparedStatement.setInt(6, order.getUserId());
 
             rowsInserted = preparedStatement.executeUpdate();
             if (rowsInserted > 0) {
@@ -128,6 +125,7 @@ public class OrderRepository extends BaseRepository implements IOrderRepository 
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            throw new RuntimeException("DB Error in save(Conn, Order): " + e.getMessage());
         }
         return rowsInserted > 0;
     }

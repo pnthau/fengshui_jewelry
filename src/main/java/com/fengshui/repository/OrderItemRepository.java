@@ -58,6 +58,7 @@ public class OrderItemRepository extends BaseRepository implements IOrderItemRep
             rowsInserted = preparedStatement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+            throw new RuntimeException("DB Error in save(OrderItem): " + e.getMessage());
         }
         return rowsInserted > 0;
     }
@@ -75,6 +76,7 @@ public class OrderItemRepository extends BaseRepository implements IOrderItemRep
             rowsInserted = preparedStatement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+            throw new RuntimeException("DB Error in save(Conn, OrderItem): " + e.getMessage());
         }
         return rowsInserted > 0;
     }

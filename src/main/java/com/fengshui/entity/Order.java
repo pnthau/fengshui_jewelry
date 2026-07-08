@@ -18,5 +18,4 @@ public class Order {
     private BigDecimal totalPrice;
     private String status;
     private LocalDateTime createdAt;
-    private int userId; // Thêm thuộc tính userId
 }
