@@ -99,6 +99,7 @@ public class OrderRepository extends BaseRepository implements IOrderRepository 
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            throw new RuntimeException("DB Error in save(Order): " + e.getMessage());
         }
         return rowsInserted > 0;
     }
@@ -124,6 +125,7 @@ public class OrderRepository extends BaseRepository implements IOrderRepository 
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            throw new RuntimeException("DB Error in save(Conn, Order): " + e.getMessage());
         }
         return rowsInserted > 0;
     }

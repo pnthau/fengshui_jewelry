@@ -68,11 +68,17 @@ public class PaymentController extends HttpServlet {
         vnpParams.put("vnp_TmnCode", VnPayConfig.VNP_TMN_CODE);
         vnpParams.put("vnp_Amount", String.valueOf(amountForVnpay));
         vnpParams.put("vnp_CurrCode", "VND");
-        vnpParams.put("vnp_BankCode", "");
+
         vnpParams.put("vnp_TxnRef", txnRef);
-        vnpParams.put("vnp_OrderInfo", "Thanh toan don hang: " + txnRef);
+        vnpParams.put("vnp_OrderInfo", "ThanhToanDonHang_" + txnRef);
+        vnpParams.put("vnp_OrderType", "other");
         vnpParams.put("vnp_Locale", "vn");
         vnpParams.put("vnp_ReturnUrl", VnPayConfig.VNP_RETURN_URL);
+        String ipAddr = request.getRemoteAddr();
+        if (ipAddr == null || ipAddr.equalsIgnoreCase("0:0:0:0:0:0:0:1") || ipAddr.contains(":")) {
+            ipAddr = "127.0.0.1";
+        }
+        vnpParams.put("vnp_IpAddr", ipAddr);
 
         Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -174,6 +180,6 @@ public class PaymentController extends HttpServlet {
             } catch (Exception e) {}
         }
 
-        response.sendRedirect(request.getContextPath() + "/home");
+        response.sendRedirect(request.getContextPath() + "/products");
     }
 }

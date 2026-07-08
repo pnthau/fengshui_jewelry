@@ -225,6 +225,19 @@ async function checkoutCart() {
         FengShuiToast.warning('Vui lòng điền đầy đủ thông tin (Họ tên, SĐT, Địa chỉ) để chúng tôi giao hàng!');
         return;
     }
+    if (name.length < 2) {
+        FengShuiToast.warning('Họ tên quá ngắn, vui lòng nhập tên thật!');
+        return;
+    }
+    const phoneRegex = /^(03|05|07|08|09)[0-9]{8}$/;
+    if (!phoneRegex.test(phone)) {
+        FengShuiToast.warning('Số điện thoại không hợp lệ! Vui lòng nhập SĐT Việt Nam (10 số).');
+        return;
+    }
+    if (addr.length < 5) {
+        FengShuiToast.warning('Địa chỉ giao hàng quá ngắn, vui lòng nhập rõ ràng!');
+        return;
+    }
 
     const url = CONTEXT_PATH + "/order";
     const params = new URLSearchParams();
@@ -273,6 +286,19 @@ async function checkoutVnpay() {
 
     if (!name || !phone || !addr) {
         FengShuiToast.warning('Vui lòng điền đầy đủ thông tin (Họ tên, SĐT, Địa chỉ) để chúng tôi giao hàng!');
+        return;
+    }
+    if (name.length < 2) {
+        FengShuiToast.warning('Họ tên quá ngắn, vui lòng nhập tên thật!');
+        return;
+    }
+    const phoneRegex = /^(03|05|07|08|09)[0-9]{8}$/;
+    if (!phoneRegex.test(phone)) {
+        FengShuiToast.warning('Số điện thoại không hợp lệ! Vui lòng nhập SĐT Việt Nam (10 số).');
+        return;
+    }
+    if (addr.length < 5) {
+        FengShuiToast.warning('Địa chỉ giao hàng quá ngắn, vui lòng nhập rõ ràng!');
         return;
     }
 

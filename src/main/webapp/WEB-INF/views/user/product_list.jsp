@@ -319,14 +319,16 @@
                     </div>
                 </form>
             </div>
-            <div class="modal-footer border-secondary">
-                <button type="button" class="btn btn-outline-light px-4 py-2"
-                        data-bs-dismiss="modal">Hủy
-                </button>
-                <button type="button" class="btn btn-gold px-5 py-2 fs-5 fw-bold"
-                        id="btnSubmitOrder">
-                    <i class="bi bi-check-circle-fill me-2"></i> Xác Nhận Đặt Hàng
-                </button>
+            <div class="modal-footer border-secondary d-flex flex-nowrap gap-2 justify-content-between w-100 px-3">
+                <button type="button" class="btn btn-outline-light px-3" data-bs-dismiss="modal">Hủy</button>
+                <div class="d-flex flex-nowrap gap-2 flex-grow-1 justify-content-end">
+                    <button type="button" class="btn btn-gold fw-bold text-nowrap px-3" id="btnSubmitOrder">
+                        <i class="bi bi-box-seam me-1"></i> COD
+                    </button>
+                    <button type="button" class="btn btn-primary fw-bold shadow text-nowrap px-3" id="btnSubmitOrderVnpay">
+                        <i class="bi bi-credit-card-fill me-1"></i> VNPay
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -585,6 +587,91 @@
             customerPhoneInputEl = modalEl.querySelector('#customerPhone');
             customerAddressInputEl = modalEl.querySelector('#customerAddress');
             btnSubmitOrderEl = modalEl.querySelector('#btnSubmitOrder');
+            const btnSubmitOrderVnpayEl = modalEl.querySelector('#btnSubmitOrderVnpay');
+
+            if (btnSubmitOrderVnpayEl && qtyInputEl && idInputEl && customerPhoneInputEl && customerNameInputEl && customerAddressInputEl) {
+                btnSubmitOrderVnpayEl.addEventListener('click', async function (event) {
+                    let productId = idInputEl.value || '';
+                    let quantity = qtyInputEl.value || '1';
+                    let customerPhone = customerPhoneInputEl.value || '';
+                    let customerName = customerNameInputEl.value || '';
+                    let customerAddress = customerAddressInputEl.value || '';
+
+                    if (!customerName || !customerPhone || !customerAddress) {
+                        FengShuiToast.warning('Vui lòng điền đầy đủ thông tin để chúng tôi giao hàng!');
+                        return;
+                    }
+                    if (customerName.length < 2) {
+                        FengShuiToast.warning('Họ tên quá ngắn, vui lòng nhập tên thật!');
+                        return;
+                    }
+                    const phoneRegex = /^(03|05|07|08|09)[0-9]{8}$/;
+                    if (!phoneRegex.test(customerPhone)) {
+                        FengShuiToast.warning('Số điện thoại không hợp lệ! Vui lòng nhập SĐT Việt Nam (10 số).');
+                        return;
+                    }
+                    if (customerAddress.length < 5) {
+                        FengShuiToast.warning('Địa chỉ giao hàng quá ngắn, vui lòng nhập rõ ràng!');
+                        return;
+                    }
+
+                    const contextPath = "${pageContext.request.contextPath}";
+                    const url = contextPath + '/quick-order';
+
+                    const params = new URLSearchParams();
+                    params.append('productId', productId);
+                    params.append('quantity', quantity);
+                    params.append('customerPhone', customerPhone);
+                    params.append('customerName', customerName);
+                    params.append('customerAddress', customerAddress);
+
+                    try {
+                        const response = await fetch(url, {
+                            method: 'post',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: params.toString()
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            const orderId = data.orderId;
+                            const totalPrice = data.totalPrice;
+
+                            // Tạo form ẩn để chuyển hướng sang VNPay
+                            const form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = contextPath + '/payment/vnpay';
+
+                            const inputAmount = document.createElement('input');
+                            inputAmount.type = 'hidden';
+                            inputAmount.name = 'amount';
+                            inputAmount.value = totalPrice;
+                            form.appendChild(inputAmount);
+
+                            const inputOrderId = document.createElement('input');
+                            inputOrderId.type = 'hidden';
+                            inputOrderId.name = 'orderId';
+                            inputOrderId.value = orderId;
+                            form.appendChild(inputOrderId);
+
+                            document.body.appendChild(form);
+                            form.submit();
+                        } else {
+                            const errorMessage = await response.text();
+                            if (errorMessage && errorMessage.trim() !== "") {
+                                FengShuiToast.error(errorMessage);
+                            } else {
+                                FengShuiToast.error("Có lỗi xảy ra từ hệ thống. Vui lòng thử lại!");
+                            }
+                        }
+                    } catch (error) {
+                        console.error("Lỗi:", error);
+                        FengShuiToast.error("Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng!");
+                    }
+                });
+            }
         }
 
         ModalManagerModule.init({
@@ -632,6 +719,24 @@
                 let customerPhone = customerPhoneInputEl.value || '';
                 let customerName = customerNameInputEl.value || '';
                 let customerAddress = customerAddressInputEl.value || '';
+
+                if (!customerName || !customerPhone || !customerAddress) {
+                    FengShuiToast.warning('Vui lòng điền đầy đủ thông tin để chúng tôi giao hàng!');
+                    return;
+                }
+                if (customerName.length < 2) {
+                    FengShuiToast.warning('Họ tên quá ngắn, vui lòng nhập tên thật!');
+                    return;
+                }
+                const phoneRegex = /^(03|05|07|08|09)[0-9]{8}$/;
+                if (!phoneRegex.test(customerPhone)) {
+                    FengShuiToast.warning('Số điện thoại không hợp lệ! Vui lòng nhập SĐT Việt Nam (10 số).');
+                    return;
+                }
+                if (customerAddress.length < 5) {
+                    FengShuiToast.warning('Địa chỉ giao hàng quá ngắn, vui lòng nhập rõ ràng!');
+                    return;
+                }
 
                 const contextPath = "${pageContext.request.contextPath}";
                 const url = contextPath + '/quick-order';

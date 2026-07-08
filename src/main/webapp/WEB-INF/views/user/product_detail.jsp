@@ -37,11 +37,17 @@
             box-shadow: 0 15px 40px rgba(243, 156, 18, 0.2);
         }
 
-        .product-image {
-            width: 100%;
+        .media-wrapper {
             border-radius: 15px;
-            object-fit: cover;
+            overflow: hidden;
             border: 2px solid rgba(243, 156, 18, 0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.3);
+        }
+        .media-wrapper img, .media-wrapper iframe {
+            object-fit: cover;
+            width: 100%;
+            height: 100%;
         }
 
         .price-tag {
@@ -151,21 +157,21 @@
                         </ul>
                         <div class="tab-content" id="media-tabs-content">
                             <div class="tab-pane fade show active" id="tab-video" role="tabpanel">
-                                <div class="ratio ratio-16x9 shadow-lg"
-                                     style="border-radius: 15px; overflow: hidden; border: 1px solid #f39c12;">
+                                <div class="ratio ratio-1x1 media-wrapper">
                                     <iframe class="product-video-iframe" src="" data-raw-url="${product.youtubeURL}" title="Product video" allowfullscreen></iframe>
                                 </div>
                             </div>
                             <div class="tab-pane fade" id="tab-image" role="tabpanel">
-                                <img src="${product.imageURL}" alt="${product.name}" class="product-image shadow-lg"
-                                     onerror="this.src='https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&auto=format&fit=crop'">
+                                <div class="ratio ratio-1x1 media-wrapper">
+                                    <img src="${product.imageURL}" alt="${product.name}" 
+                                         onerror="this.style.display='none';">
+                                </div>
                             </div>
                         </div>
                     </c:when>
                     <c:when test="${not empty product.youtubeURL}">
                         <!-- Chỉ có Video -->
-                        <div class="ratio ratio-16x9 shadow-lg mt-3"
-                             style="border-radius: 15px; overflow: hidden; border: 1px solid #f39c12;">
+                        <div class="ratio ratio-1x1 media-wrapper mb-3">
                             <iframe class="product-video-iframe" src="" data-raw-url="${product.youtubeURL}" title="Product video" allowfullscreen></iframe>
                         </div>
                     </c:when>
@@ -173,14 +179,14 @@
                         <!-- Chỉ có Hình ảnh -->
                         <c:choose>
                             <c:when test="${not empty product.imageURL}">
-                                <img src="${product.imageURL}" alt="${product.name}"
-                                     class="product-image shadow-lg mb-3"
-                                     onerror="this.src='https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&auto=format&fit=crop'">
+                                <div class="ratio ratio-1x1 media-wrapper mb-3">
+                                    <img src="${product.imageURL}" alt="${product.name}"
+                                         onerror="this.style.display='none';">
+                                </div>
                             </c:when>
                             <c:otherwise>
-                                <div class="product-image shadow-lg mb-3 d-flex align-items-center justify-content-center"
-                                     style="height: 400px; background: rgba(0,0,0,0.5);">
-                                    <span class="text-muted">Chưa có hình ảnh</span>
+                                <div class="ratio ratio-1x1 media-wrapper mb-3">
+                                    <div class="w-100 h-100" style="background: rgba(0,0,0,0.5);"></div>
                                 </div>
                             </c:otherwise>
                         </c:choose>
@@ -369,14 +375,23 @@
                 return "https://www.facebook.com/plugins/video.php?href=" + encodeURIComponent(rawUrl) + "&show_text=false&t=0";
             }
 
-            return rawUrl; // Fallback
+            if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) {
+                return rawUrl;
+            }
+
+            return null; // Trả về null nếu không phải link hợp lệ
         }
 
         // Vòng lặp duyệt các iframe của anh
         document.querySelectorAll(".product-video-iframe").forEach(function(iframe) {
-            let rawUrl = iframe.dataset.rawUrl; // Cách 1 dùng dataset của anh
-            if (rawUrl) {
-                iframe.src = getEmbedUrl(rawUrl); // Cách 2 gán trực tiếp của anh
+            let rawUrl = iframe.dataset.rawUrl;
+            let embedUrl = getEmbedUrl(rawUrl);
+            
+            if (embedUrl === null) {
+                // Link video sai định dạng, ẩn iframe đi (để trống)
+                iframe.style.display = 'none';
+            } else {
+                iframe.src = embedUrl;
             }
         });
     });
