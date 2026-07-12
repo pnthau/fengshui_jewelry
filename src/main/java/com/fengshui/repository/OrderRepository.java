@@ -19,8 +19,14 @@ public class OrderRepository extends BaseRepository implements IOrderRepository 
     private static final String DELETE_ORDER = "DELETE FROM orders WHERE id = ?";
     private static final String SELECT_TOTAL_REVENUE = "SELECT SUM(total_price) FROM orders WHERE status = 'DELIVERED'";
     private static final String COUNT_ORDERS_BY_STATUS = "SELECT COUNT(*) FROM orders WHERE status = ?";
-    private static final String SELECT_MONTHLY_REVENUE = "SELECT MONTH(created_at) AS month, SUM(total_price) AS revenue FROM orders WHERE status = 'DELIVERED' AND YEAR(created_at) = YEAR(CURDATE()) GROUP BY MONTH(created_at) ORDER BY MONTH(created_at)";
-
+    private static final String SELECT_MONTHLY_REVENUE =
+            "SELECT EXTRACT(MONTH FROM created_at) AS month, " +
+                    "       SUM(total_price) AS revenue " +
+                    "FROM orders " +
+                    "WHERE status = 'DELIVERED' " +
+                    "AND EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM CURRENT_DATE) " +
+                    "GROUP BY EXTRACT(MONTH FROM created_at) " +
+                    "ORDER BY month";
 
     @Override
     public List<Order> findAll() {

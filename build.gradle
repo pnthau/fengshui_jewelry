@@ -48,6 +48,8 @@ dependencies {
 
     // Cloudinary SDK cho chức năng Upload File
     implementation 'com.cloudinary:cloudinary-http44:1.36.0'
+
+    implementation 'org.postgresql:postgresql:42.7.1'
 }
 
 
