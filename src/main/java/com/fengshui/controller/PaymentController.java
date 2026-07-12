@@ -1,5 +1,6 @@
 package com.fengshui.controller;
 
+import com.fengshui.enums.OrderStatus; // Import OrderStatus
 import com.fengshui.service.IOrderService;
 import com.fengshui.service.OrderService;
 import com.fengshui.util.VnPayConfig;
@@ -156,7 +157,8 @@ public class PaymentController extends HttpServlet {
                 String orderIdStr = request.getParameter("vnp_TxnRef");
                 try {
                     int orderId = Integer.parseInt(orderIdStr);
-                    orderService.updateStatus(orderId, "SUCCESS");
+                    // Cập nhật trạng thái thành DELIVERING (Đang giao)
+                    orderService.updateStatus(orderId, OrderStatus.DELIVERING.name());
                 } catch (Exception e) {
                     System.out.println("vnp_TxnRef không phải là Order ID hợp lệ: " + orderIdStr);
                 }
