@@ -47,6 +47,8 @@ public class OrderService implements IOrderService {
             connection = ((BaseRepository) orderRepository).getConnection();
             connection.setAutoCommit(false);
 
+            // 1. Lưu Order
+            order.setStatus(OrderStatus.PENDING.name());
             if (!orderRepository.save(connection, order)) {
                 connection.rollback();
                 return false;
@@ -56,23 +58,18 @@ public class OrderService implements IOrderService {
             for (OrderItem item : items) {
                 item.setOrderId(order.getId());
 
-                // Kiểm tra tồn kho trước khi lưu và trừ
                 Product product = productRepository.findByID(item.getProductId());
                 if (product == null) {
                     throw new RuntimeException("Sản phẩm #" + item.getProductId() + " không tồn tại.");
                 }
                 if (product.getQuantity() < item.getQuantity()) {
+                    connection.rollback(); // Rollback nếu không đủ hàng ngay cả khi chưa trừ kho
                     throw new RuntimeException("Không đủ số lượng sản phẩm " + product.getName() + " trong kho. Yêu cầu: " + item.getQuantity() + ", Hiện có: " + product.getQuantity());
                 }
 
                 if (!orderItemRepository.save(connection, item)) {
                     connection.rollback();
                     return false;
-                }
-                // Trừ kho
-                if (!productRepository.reduceStock(connection, item.getProductId(), item.getQuantity())) {
-                    connection.rollback();
-                    throw new RuntimeException("Lỗi khi trừ số lượng sản phẩm " + product.getName() + " trong kho.");
                 }
             }
 
@@ -133,10 +130,14 @@ public class OrderService implements IOrderService {
             if (oldOrder == null) {
                 throw new RuntimeException("Không tìm thấy đơn hàng với ID: " + orderId);
             }
-            String oldStatus = oldOrder.getStatus();
+            String oldStatusStr = oldOrder.getStatus();
+
+            // Chuyển đổi trạng thái sang Enum để dễ so sánh
+            OrderStatus oldStatus = OrderStatus.fromString(oldStatusStr);
+            OrderStatus newStatusEnum = OrderStatus.fromString(newStatus);
 
             // Nếu trạng thái mới giống trạng thái cũ, không làm gì cả
-            if (oldStatus.equals(newStatus)) {
+            if (oldStatus == newStatusEnum) {
                 connection.commit();
                 return true;
             }
@@ -146,51 +147,6 @@ public class OrderService implements IOrderService {
                 connection.rollback();
                 return false;
             }
-
-            // 2. Xử lý tồn kho dựa trên sự thay đổi trạng thái
-            List<OrderItem> orderItems = orderItemRepository.findByOrderID(orderId);
-
-            // Định nghĩa các trạng thái "đã hủy" và "đã giao"
-            boolean oldStatusIsCancelled = OrderStatus.CANCELLED.name().equals(oldStatus);
-            boolean newStatusIsCancelled = OrderStatus.CANCELLED.name().equals(newStatus);
-            boolean oldStatusIsDelivered = OrderStatus.DELIVERED.name().equals(oldStatus);
-            boolean newStatusIsDelivered = OrderStatus.DELIVERED.name().equals(newStatus);
-
-
-            // Trường hợp 1: Chuyển từ trạng thái KHÔNG HỦY sang HỦY -> Hoàn kho
-            if (!oldStatusIsCancelled && newStatusIsCancelled) {
-                for (OrderItem item : orderItems) {
-                    if (!productRepository.increaseStock(connection, item.getProductId(), item.getQuantity())) {
-                        connection.rollback();
-                        throw new RuntimeException("Lỗi khi hoàn kho sản phẩm " + item.getProductName() + " cho đơn hàng bị hủy.");
-                    }
-                }
-            }
-            // Trường hợp 2: Chuyển từ trạng thái HỦY sang KHÔNG HỦY -> Trừ kho lại
-            else if (oldStatusIsCancelled && !newStatusIsCancelled) {
-                for (OrderItem item : orderItems) {
-                    Product product = productRepository.findByID(item.getProductId());
-                    if (product == null || product.getQuantity() < item.getQuantity()) {
-                        connection.rollback();
-                        throw new RuntimeException("Không đủ số lượng sản phẩm " + item.getProductName() + " trong kho để khôi phục đơn hàng. Yêu cầu: " + item.getQuantity() + ", Hiện có: " + (product != null ? product.getQuantity() : 0));
-                    }
-                    if (!productRepository.reduceStock(connection, item.getProductId(), item.getQuantity())) {
-                        connection.rollback();
-                        throw new RuntimeException("Lỗi khi trừ kho sản phẩm " + item.getProductName() + " để khôi phục đơn hàng.");
-                    }
-                }
-            }
-            // Trường hợp 3: Chuyển từ DELIVERED sang trạng thái khác KHÔNG PHẢI CANCELLED -> Hoàn kho
-            // Điều này xảy ra nếu admin muốn "đảo ngược" một đơn hàng đã thành công
-            else if (oldStatusIsDelivered && !newStatusIsDelivered && !newStatusIsCancelled) {
-                for (OrderItem item : orderItems) {
-                    if (!productRepository.increaseStock(connection, item.getProductId(), item.getQuantity())) {
-                        connection.rollback();
-                        throw new RuntimeException("Lỗi khi hoàn kho sản phẩm " + item.getProductName() + " do thay đổi trạng thái đơn hàng từ DELIVERED.");
-                    }
-                }
-            }
-
 
             connection.commit();
             return true;

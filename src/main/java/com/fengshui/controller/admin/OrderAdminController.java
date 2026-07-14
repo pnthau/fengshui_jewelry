@@ -166,7 +166,7 @@ public class OrderAdminController extends HttpServlet {
             // Cần lấy lại items dưới dạng DTO để hiển thị lại form với lỗi
             List<OrderItem> orderItems = orderService.findItemsByOrderID(id);
             List<OrderItemDTO> itemDTOs = new ArrayList<>();
-            IProductService productService = new ProductService(); // Tạm thời khởi tạo lại để tránh lỗi nếu chưa inject ở đây
+            // IProductService productService = new ProductService();
 
             for (OrderItem item : orderItems) {
                 Product product = productService.findByID(item.getProductId());
