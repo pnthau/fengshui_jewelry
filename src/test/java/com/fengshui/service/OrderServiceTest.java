@@ -91,9 +91,9 @@ class OrderServiceTest {
         String errorMessage = exception.getMessage();
         System.out.println("Câu báo lỗi thực tế: " + errorMessage); // In ra console để bạn xem cho đã!
         
-        assertTrue(errorMessage.contains("Not enough stock for product : Vòng Tỳ Hưu"), "Câu báo lỗi phải chứa thông tin ID sản phẩm thiếu hàng");
-        assertTrue(errorMessage.contains("Required: 5"), "Câu báo lỗi phải chứa số lượng yêu cầu");
-        assertTrue(errorMessage.contains("Available: 2"), "Câu báo lỗi phải chứa số lượng tồn kho thực tế");
+        assertTrue(errorMessage.contains("Không đủ số lượng sản phẩm Vòng Tỳ Hưu"), "Câu báo lỗi phải chứa thông tin sản phẩm thiếu hàng");
+        assertTrue(errorMessage.contains("Yêu cầu: 5"), "Câu báo lỗi phải chứa số lượng yêu cầu");
+        assertTrue(errorMessage.contains("Hiện có: 2"), "Câu báo lỗi phải chứa số lượng tồn kho thực tế");
 
         // --- BƯỚC 4: KIỂM TRA TRANSACTION (VÔ CÙNG QUAN TRỌNG) ---
         // Đảm bảo rằng ngay khi phát hiện thiếu hàng, hệ thống đã gọi lệnh rollback() để hủy đơn!

@@ -108,11 +108,15 @@ public class CartController extends HttpServlet {
         HttpSession session = req.getSession();
 
         Cart cart = (Cart) session.getAttribute("cart");
-        if (cart != null) {
-            Product product = productService.findByID(productId);
-            if (product != null) {
-                cart.addItem(product, quantity);
-            }
+        // FIX LỖI Ở ĐÂY: Nếu cart bị null (do vừa thanh toán xong), phải tạo mới!
+        if (cart == null) {
+            cart = new Cart();
+            session.setAttribute("cart", cart);
+        }
+
+        Product product = productService.findByID(productId);
+        if (product != null) {
+            cart.addItem(product, quantity);
         }
     }
 

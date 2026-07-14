@@ -186,11 +186,21 @@
                                  alt="${product.name}"
                                  onerror="this.src='https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&auto=format&fit=crop'">
                             <!-- Nút thêm giỏ hàng cực cháy (Mở rộng có chữ) -->
-                            <button class="btn-add-cart-icon"
-                                    onclick="addToCart(event, '${product.id}', '${fn:escapeXml(product.name)}', ${product.price}, '${product.imageURL}')"
-                                    data-bs-toggle="tooltip" data-bs-placement="top" title="Thêm vào giỏ hàng">
-                                <i class="bi bi-cart-plus-fill"></i>
-                            </button>
+                            <c:choose>
+                                <c:when test="${product.quantity > 0}">
+                                    <button class="btn-add-cart-icon"
+                                            onclick="addToCart(event, '${product.id}', '${fn:escapeXml(product.name)}', ${product.price}, '${product.imageURL}')"
+                                            data-bs-toggle="tooltip" data-bs-placement="top" title="Thêm vào giỏ hàng">
+                                        <i class="bi bi-cart-plus-fill"></i>
+                                    </button>
+                                </c:when>
+                                <c:otherwise>
+                                    <button class="btn-add-cart-icon bg-secondary opacity-50" disabled
+                                            data-bs-toggle="tooltip" data-bs-placement="top" title="Hết hàng">
+                                        <i class="bi bi-x-circle-fill"></i>
+                                    </button>
+                                </c:otherwise>
+                            </c:choose>
                         </div>
                         <div class="product-body">
                             <div class="mb-2">
@@ -220,13 +230,20 @@
                                        class="btn btn-outline-secondary w-100 py-1">Chi tiết</a>
                                 </div>
                                 <div class="col-6">
-                                    <button type="button" class="btn btn-gold w-100 py-1 btn-quick-order"
-                                            data-id="${product.id}"
-                                            data-name="${fn:escapeXml(product.name)}"
-                                            data-price="${product.price}"
-                                            data-image="${pageContext.request.contextPath}/${product.imageURL}">Mua
-                                        nhanh
-                                    </button>
+                                    <c:choose>
+                                        <c:when test="${product.quantity > 0}">
+                                            <button type="button" class="btn btn-gold w-100 py-1 btn-quick-order"
+                                                    data-id="${product.id}"
+                                                    data-name="${fn:escapeXml(product.name)}"
+                                                    data-price="${product.price}"
+                                                    data-image="${pageContext.request.contextPath}/${product.imageURL}">Mua
+                                                nhanh
+                                            </button>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <button type="button" class="btn btn-secondary w-100 py-1 opacity-50" disabled>Hết hàng</button>
+                                        </c:otherwise>
+                                    </c:choose>
                                 </div>
                             </div>
                         </div>

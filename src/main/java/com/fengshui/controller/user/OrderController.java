@@ -1,7 +1,10 @@
 package com.fengshui.controller.user;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fengshui.entity.*;
 import com.fengshui.service.OrderService;
+import com.fengshui.websocket.OrderNotificationEndpoint;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -44,6 +47,23 @@ public class OrderController extends HttpServlet {
 
         try {
             boolean isSuccess = orderService.placeOrderFromCart(order, items);
+
+            // --- THÊM MỚI: Bắn thông báo realtime qua WebSocket ---
+            // JSON by jackson
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode notifData = mapper.createObjectNode();
+
+            notifData.put("orderId", order.getId());
+            notifData.put("customerName", order.getCustomerName());
+            notifData.put("customerPhone", order.getCustomerPhone() != null ? order.getCustomerPhone() : "");
+            notifData.put("customerAddress", order.getCustomerAddress() != null ? order.getCustomerAddress() : "");
+            notifData.put("totalPrice", order.getTotalPrice().toString());
+            notifData.put("status", order.getStatus());
+
+            //send to sale.
+            String notifJson = notifData.toString();
+            OrderNotificationEndpoint.broadcast(notifJson);
+
             session.removeAttribute("cart");
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.setContentType("application/json");
