@@ -2,6 +2,7 @@ package com.fengshui.repository;
 
 import com.fengshui.entity.InventoryTransaction;
 import com.fengshui.entity.Product;
+import com.fengshui.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -15,11 +16,13 @@ import static org.junit.jupiter.api.Assertions.*;
 public class InventoryTransactionRepositoryTest {
     private ProductRepository productRepository;
     private InventoryTransactionRepository transactionRepository;
+    private UserRepository userRepository;
 
     @BeforeEach
     public void setUp() {
         productRepository = new ProductRepository();
         transactionRepository = new InventoryTransactionRepository();
+        userRepository = new UserRepository();
     }
 
     @Test
@@ -34,6 +37,16 @@ public class InventoryTransactionRepositoryTest {
     @Test
     public void testTransaction_SaveAndFind() {
         assertDoesNotThrow(() -> {
+            // 0. Tạo User test để đảm bảo tồn tại khóa ngoại created_by
+            User testUser = new User();
+            testUser.setUsername("test_admin_tx_" + System.currentTimeMillis());
+            testUser.setPassword("test123");
+            testUser.setRole("ADMIN");
+            userRepository.save(testUser);
+            User savedUser = userRepository.findByUsername(testUser.getUsername());
+            assertNotNull(savedUser, "Tạo User test cho giao dịch kho phải thành công!");
+            int testUserId = savedUser.getId();
+
             // 1. Tạo sản phẩm test
             Product product = new Product();
             product.setName("Sản phẩm Test Kho");
@@ -44,14 +57,14 @@ public class InventoryTransactionRepositoryTest {
             productRepository.save(product);
             assertTrue(product.getId() > 0);
 
-            // 2. Tạo giao dịch nhập kho test (sử dụng created_by = 1 là Admin mặc định trong SQL)
+            // 2. Tạo giao dịch nhập kho test
             InventoryTransaction tx = new InventoryTransaction();
             tx.setProductId(product.getId());
             tx.setTransactionType("IMPORT");
             tx.setQuantity(50);
             tx.setPrice(new BigDecimal("80000.00"));
             tx.setReason("Nhập hàng test JUnit");
-            tx.setCreatedBy(1); // Admin ID = 1
+            tx.setCreatedBy(testUserId);
 
             // 3. Test save()
             boolean isSaved = transactionRepository.save(tx);
@@ -64,15 +77,19 @@ public class InventoryTransactionRepositoryTest {
             System.out.println("✅ Test save() và findByProductID() cho Kho thành công!");
 
             // 5. Dọn dẹp CSDL
-            // Xóa giao dịch kho trước (Dùng kết nối thô trong test để xóa sạch tránh lỗi khóa ngoại)
+            // Xóa giao dịch kho trước
             try (Connection conn = productRepository.getConnection();
                  PreparedStatement ps = conn.prepareStatement("DELETE FROM inventory_transactions WHERE product_id = ?")) {
                 ps.setInt(1, product.getId());
                 ps.executeUpdate();
             }
             
-            // Sau khi xóa giao dịch kho, ta mới xóa được sản phẩm test
+            // Xóa sản phẩm test
             productRepository.delete(product.getId());
+
+            // Xóa user test
+            userRepository.delete(testUserId);
+
             System.out.println("✅ Dữ liệu test Kho đã được dọn sạch hoàn toàn!");
         });
     }

@@ -250,10 +250,19 @@
 
                 <!-- Nút Hành động -->
                 <div class="mt-5 d-flex gap-3">
-                    <button class="btn btn-gold btn-lg w-50"
-                            onclick="addToCart(event, '${product.id}', '${fn:escapeXml(product.name)}', ${product.price}, '${product.imageURL}')">
-                        <i class="bi bi-cart-plus-fill me-2"></i>Thêm vào giỏ
-                    </button>
+                    <c:choose>
+                        <c:when test="${product.quantity > 0}">
+                            <button class="btn btn-gold btn-lg w-50"
+                                    onclick="addToCart(event, '${product.id}', '${fn:escapeXml(product.name)}', ${product.price}, '${product.imageURL}')">
+                                <i class="bi bi-cart-plus-fill me-2"></i>Thêm vào giỏ
+                            </button>
+                        </c:when>
+                        <c:otherwise>
+                            <button class="btn btn-secondary btn-lg w-50 opacity-50" disabled style="border-radius: 30px;">
+                                <i class="bi bi-x-circle-fill me-2"></i>Tạm hết hàng
+                            </button>
+                        </c:otherwise>
+                    </c:choose>
                     <a href="${pageContext.request.contextPath}/home#contact"
                        class="btn btn-outline-warning btn-lg w-50" style="border-radius: 30px;">
                         <i class="bi bi-telephone-fill me-2"></i>Nhờ tư vấn

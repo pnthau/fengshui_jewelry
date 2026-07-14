@@ -47,7 +47,6 @@ public class OrderService implements IOrderService {
             connection = ((BaseRepository) orderRepository).getConnection();
             connection.setAutoCommit(false);
 
-            // 1. Lưu Order
             if (!orderRepository.save(connection, order)) {
                 connection.rollback();
                 return false;

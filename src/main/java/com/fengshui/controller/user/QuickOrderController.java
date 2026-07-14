@@ -64,6 +64,22 @@ public class QuickOrderController extends HttpServlet {
         itemList.add(item);
         try {
             orderService.placeOrder(order, itemList);
+            
+            // --- THÊM MỚI: Bắn thông báo realtime qua WebSocket ---
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.node.ObjectNode notifData = mapper.createObjectNode();
+            
+            notifData.put("orderId", order.getId());
+            notifData.put("customerName", order.getCustomerName());
+            notifData.put("customerPhone", order.getCustomerPhone() != null ? order.getCustomerPhone() : "");
+            notifData.put("customerAddress", order.getCustomerAddress() != null ? order.getCustomerAddress() : "");
+            notifData.put("totalPrice", order.getTotalPrice().toString());
+            notifData.put("status", order.getStatus());
+
+            String notifJson = notifData.toString();
+            com.fengshui.websocket.OrderNotificationEndpoint.broadcast(notifJson);
+            // -----------------------------------------------------
+
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.getWriter().print("{\"orderId\":" + order.getId() + ",\"totalPrice\":" + order.getTotalPrice() + "}");
         } catch (RuntimeException ex) {

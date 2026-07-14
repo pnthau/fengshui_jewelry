@@ -17,9 +17,8 @@ repositories {
 }
 
 dependencies {
-    // Jakarta Servlet API & JSP API (provided by Tomcat 10)
-    providedCompile 'jakarta.servlet:jakarta.servlet-api:6.0.0'
-    providedCompile 'jakarta.servlet.jsp:jakarta.servlet.jsp-api:3.1.0'
+    // Jakarta EE 10 Web API (Servlet, JSP, WebSocket, etc. provided by Tomcat 10)
+    compileOnly 'jakarta.platform:jakarta.jakartaee-web-api:10.0.0'
 
     // Jakarta JSTL API & Glassfish JSTL implementation for Tomcat 10+
     implementation 'jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api:3.0.0'

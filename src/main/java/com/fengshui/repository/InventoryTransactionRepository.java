@@ -172,11 +172,21 @@ public class InventoryTransactionRepository extends BaseRepository implements II
             tx.setCreatedAt(ts.toLocalDateTime());
         }
         tx.setCreatedBy(resultSet.getInt("created_by"));
-        tx.setStatus(resultSet.getString("status"));
+        try {
+            tx.setStatus(resultSet.getString("status"));
+        } catch (SQLException ignored) {
+            // cột 'status' tùy chọn nếu DB chưa có
+        }
         return tx;
     }
+
     private InventoryTransactionDTO mapResultSetToDTO(ResultSet rs) throws SQLException {
         Timestamp ts = rs.getTimestamp("created_at");
+        String status = null;
+        try {
+            status = rs.getString("status");
+        } catch (SQLException ignored) {
+        }
         return InventoryTransactionDTO.builder()
                 .id(rs.getInt("id"))
                 .productId(rs.getInt("product_id"))
@@ -188,7 +198,7 @@ public class InventoryTransactionRepository extends BaseRepository implements II
                 .reason(rs.getString("reason"))
                 .createdAt(ts != null ? ts.toLocalDateTime() : null)
                 .adminId(rs.getInt("created_by"))
-                .status(rs.getString("status"))
+                .status(status)
                 .build();
     }
 }
