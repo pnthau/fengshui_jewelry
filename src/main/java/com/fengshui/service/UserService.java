@@ -41,7 +41,6 @@ public class UserService implements IUserService {
     @Override
     public User login(String username, String password) {
         User user = userRepository.findByUsername(username);
-
         if (user != null && user.getPassword().equals(password)) {
             return user;
         }

@@ -26,6 +26,7 @@ dependencies {
 
     // MySQL Driver (using modern maven coordinates)
     implementation 'com.mysql:mysql-connector-j:8.0.33'
+    implementation 'org.postgresql:postgresql:42.7.3'
 
     // Lombok (Compilation and Annotation Processing)
     compileOnly 'org.projectlombok:lombok:1.18.30'

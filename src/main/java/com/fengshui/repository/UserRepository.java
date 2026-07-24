@@ -12,8 +12,7 @@ import java.util.List;
 public class UserRepository extends BaseRepository implements IUserRepository {
     private static final String SELECT_ALL_USERS = "SELECT * FROM users";
     private static final String SELECT_USER_BY_ID = "SELECT * FROM users WHERE id = ?";
-    private static final String SELECT_USER_BY_USERNAME = "SELECT * FROM users WHERE username = ?";
-    private static final String INSERT_USER = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
+    private static final String SELECT_USER_BY_USERNAME = "SELECT * FROM public.users WHERE LOWER(username) = LOWER(?)";    private static final String INSERT_USER = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
     private static final String UPDATE_USER = "UPDATE users SET username = ?, password = ?, role = ? WHERE id = ?";
     private static final String DELETE_USER = "DELETE FROM users WHERE id = ?";
 

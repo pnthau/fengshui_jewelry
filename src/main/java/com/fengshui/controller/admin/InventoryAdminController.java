@@ -2,15 +2,18 @@ package com.fengshui.controller.admin;
 
 import com.fengshui.entity.InventoryTransaction;
 import com.fengshui.entity.Product;
+import com.fengshui.entity.User;
 import com.fengshui.DTO.InventoryTransactionDTO;
 import com.fengshui.service.InventoryTransactionService;
 import com.fengshui.service.ProductService;
 import com.fengshui.service.IProductService;
+import com.fengshui.enums.UserRole;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
@@ -30,6 +33,11 @@ public class InventoryAdminController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Kiểm tra quyền: chỉ ADMIN và WAREHOUSE có quyền truy cập
+        if (!checkPermission(request, response, UserRole.ADMIN, UserRole.WAREHOUSE)) {
+            return;
+        }
+
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
         response.setContentType("text/html;charset=UTF-8");
@@ -54,6 +62,11 @@ public class InventoryAdminController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Kiểm tra quyền: chỉ ADMIN và WAREHOUSE có quyền truy cập
+        if (!checkPermission(request, response, UserRole.ADMIN, UserRole.WAREHOUSE)) {
+            return;
+        }
+
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
         response.setContentType("text/html;charset=UTF-8");
@@ -203,5 +216,33 @@ public class InventoryAdminController extends HttpServlet {
         request.setAttribute("title", "Nhật ký kho");
         request.setAttribute("contentPage", "/WEB-INF/views/admin/inventory_list.jsp");
         request.getRequestDispatcher("/WEB-INF/views/admin/admin_layout.jsp").forward(request, response);
+    }
+
+    /**
+     * Kiểm tra quyền truy cập dựa trên role của user
+     * @param request HttpServletRequest
+     * @param response HttpServletResponse
+     * @param requiredRoles Các role được phép truy cập
+     * @return true nếu user có quyền, false nếu không
+     */
+    private boolean checkPermission(HttpServletRequest request, HttpServletResponse response, UserRole... requiredRoles)
+            throws IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("currentUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return false;
+        }
+
+        User currentUser = (User) session.getAttribute("currentUser");
+        UserRole userRole = UserRole.fromString(currentUser.getRole());
+
+        for (UserRole role : requiredRoles) {
+            if (userRole == role) {
+                return true;
+            }
+        }
+
+        response.sendRedirect(request.getContextPath() + "/login?error=forbidden");
+        return false;
     }
 }

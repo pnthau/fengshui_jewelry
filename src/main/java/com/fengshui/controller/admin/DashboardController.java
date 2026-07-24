@@ -9,6 +9,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.util.Map;
@@ -27,6 +28,16 @@ public class DashboardController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
+
+        // Check session - nếu không có session hoặc currentUser, redirect về login
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("currentUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/login?error=unauthorized");
+            return;
+        }
+
         DashboardDTO dashboardData = dashboardService.getDashboardData();
         request.setAttribute("dashboardData", dashboardData);
 
@@ -42,7 +53,7 @@ public class DashboardController extends HttpServlet {
         request.setAttribute("chartData", data);
 
         // Đặt tiêu đề trang
-        request.setAttribute("title", "Dashboard Admin");
+        request.setAttribute("title", "Dashboard");
         // Chuyển hướng đến layout chung
         request.setAttribute("contentPage", "/WEB-INF/views/admin/dashboard.jsp");
         request.getRequestDispatcher("/WEB-INF/views/admin/admin_layout.jsp").forward(request, response);
