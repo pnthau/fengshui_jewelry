@@ -60,6 +60,16 @@
                             <span class="nav-link-title">Dashboard</span>
                         </a>
                     </li>
+                    <%-- Determine current user role for UI visibility --%>
+                    <% String currentRole = ""; 
+                       if (session.getAttribute("currentUser") != null) {
+                           com.fengshui.entity.User cu = (com.fengshui.entity.User) session.getAttribute("currentUser");
+                           currentRole = cu.getRole() != null ? cu.getRole().toLowerCase() : "";
+                       }
+                    %>
+
+                    <%-- Products: admin only --%>
+                    <% if ("admin".equals(currentRole)) { %>
                     <li class="nav-item">
                         <a class="nav-link" href="${pageContext.request.contextPath}/admin/products?action=list">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
@@ -68,6 +78,10 @@
                             <span class="nav-link-title">Sản phẩm</span>
                         </a>
                     </li>
+                    <% } %>
+
+                    <%-- Orders: admin + sales --%>
+                    <% if ("admin".equals(currentRole) || "sales".equals(currentRole)) { %>
                     <li class="nav-item">
                         <a class="nav-link" href="${pageContext.request.contextPath}/admin/orders?action=list">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
@@ -76,6 +90,10 @@
                             <span class="nav-link-title">Đơn hàng</span>
                         </a>
                     </li>
+                    <% } %>
+
+                    <%-- Inventory: admin + warehouse --%>
+                    <% if ("admin".equals(currentRole) || "warehouse".equals(currentRole)) { %>
                     <li class="nav-item">
                         <a class="nav-link" href="${pageContext.request.contextPath}/admin/inventory?action=list">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
@@ -84,6 +102,7 @@
                             <span class="nav-link-title">Nhật ký kho</span>
                         </a>
                     </li>
+                    <% } %>
                     <li class="nav-item">
                         <a class="nav-link" href="#">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">

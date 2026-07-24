@@ -4,7 +4,9 @@ import com.fengshui.DTO.OrderItemDTO; // Import DTO mới
 import com.fengshui.entity.Order;
 import com.fengshui.entity.OrderItem;
 import com.fengshui.entity.Product; // Import Product entity
+import com.fengshui.entity.User;
 import com.fengshui.enums.OrderStatus;
+import com.fengshui.enums.UserRole;
 import com.fengshui.service.IOrderService;
 import com.fengshui.service.IProductService; // Import ProductService interface
 import com.fengshui.service.OrderService;
@@ -14,6 +16,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.util.ArrayList; // Import ArrayList
@@ -33,6 +36,11 @@ public class OrderAdminController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Kiểm tra quyền: chỉ ADMIN và SALES có quyền truy cập
+        if (!checkPermission(request, response, UserRole.ADMIN, UserRole.SALES)) {
+            return;
+        }
+
         String action = request.getParameter("action");
         if (action == null) {
             action = ACTION_LIST;
@@ -53,6 +61,11 @@ public class OrderAdminController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Kiểm tra quyền: chỉ ADMIN và SALES có quyền truy cập
+        if (!checkPermission(request, response, UserRole.ADMIN, UserRole.SALES)) {
+            return;
+        }
+
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8"); // Đảm bảo response cũng được mã hóa UTF-8
         response.setContentType("text/html;charset=UTF-8"); // Đảm bảo response cũng được mã hóa UTF-8
@@ -210,5 +223,33 @@ public class OrderAdminController extends HttpServlet {
         } catch (NumberFormatException e) {
             response.sendRedirect(request.getContextPath() + "/admin/orders?action=" + ACTION_LIST);
         }
+    }
+
+    /**
+     * Kiểm tra quyền truy cập dựa trên role của user
+     * @param request HttpServletRequest
+     * @param response HttpServletResponse
+     * @param requiredRoles Các role được phép truy cập
+     * @return true nếu user có quyền, false nếu không
+     */
+    private boolean checkPermission(HttpServletRequest request, HttpServletResponse response, UserRole... requiredRoles)
+            throws IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("currentUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return false;
+        }
+
+        User currentUser = (User) session.getAttribute("currentUser");
+        UserRole userRole = UserRole.fromString(currentUser.getRole());
+
+        for (UserRole role : requiredRoles) {
+            if (userRole == role) {
+                return true;
+            }
+        }
+
+        response.sendRedirect(request.getContextPath() + "/login?error=forbidden");
+        return false;
     }
 }

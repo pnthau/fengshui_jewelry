@@ -3,7 +3,8 @@ package com.fengshui.controller;
 import com.fengshui.entity.User;
 import com.fengshui.service.IUserService;
 import com.fengshui.service.UserService;
-import com.fengshui.controller.admin.AdminSecurityFilter;
+import com.fengshui.controller.filter.RoleBasedSecurityFilter;
+import com.fengshui.enums.UserRole;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -27,10 +28,16 @@ public class LoginController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType("text/html;charset=UTF-8");
+
         // Kiểm tra xem có bị SecurityFilter "đá" văng ra không
         String error = request.getParameter("error");
-        if (AdminSecurityFilter.ERR_UNAUTHORIZED.equals(error)) {
-            request.setAttribute("errorMessage", "Cảnh báo: Bạn không có quyền truy cập vào khu vực Quản trị viên!");
+        if (RoleBasedSecurityFilter.ERR_UNAUTHORIZED.equals(error)) {
+            request.setAttribute("errorMessage", "Cảnh báo: Bạn chưa đăng nhập!");
+        } else if ("forbidden".equals(error)) {
+            request.setAttribute("errorMessage", "Cảnh báo: Bạn không có quyền truy cập khu vực này!");
         }
 
         // Hiển thị trang đăng nhập
@@ -39,6 +46,10 @@ public class LoginController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType("text/html;charset=UTF-8");
+
         String username = request.getParameter("username");
         String password = request.getParameter("password");
 
@@ -53,15 +64,22 @@ public class LoginController extends HttpServlet {
         User user = userService.login(username, password);
 
         if (user != null) {
+            System.out.println("=== LOGIN SUCCESS ===");
+            System.out.println("User: " + user.getUsername());
+            System.out.println("Role: " + user.getRole());
+            
             HttpSession session = request.getSession();
-            session.setAttribute("currentUser", user); // Lưu thông tin user vào session
+            session.setAttribute("currentUser", user);
+            System.out.println("Session ID: " + session.getId());
+            System.out.println("CurrentUser in session: " + session.getAttribute("currentUser"));
 
-            if ("admin".equalsIgnoreCase(user.getRole())) {
-                response.sendRedirect(request.getContextPath() + "/admin/dashboard"); // Chuyển hướng đến trang admin
-            } else {
-                response.sendRedirect(request.getContextPath() + "/home"); // Chuyển hướng đến trang người dùng thường
-            }
+            // Redirect all authenticated users to the common admin dashboard
+            String redirectUrl = request.getContextPath() + "/admin/dashboard";
+            System.out.println("Redirecting to: " + redirectUrl);
+            response.sendRedirect(redirectUrl);
         } else {
+            System.out.println("=== LOGIN FAILED ===");
+            System.out.println("User not found or password mismatch");
             request.setAttribute("errorMessage", "Tên đăng nhập hoặc mật khẩu không đúng.");
             request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
         }

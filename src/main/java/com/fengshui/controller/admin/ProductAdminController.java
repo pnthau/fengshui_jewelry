@@ -3,15 +3,18 @@ package com.fengshui.controller.admin;
 import com.fengshui.entity.InventoryTransaction;
 import com.cloudinary.utils.ObjectUtils;
 import com.fengshui.entity.Product;
+import com.fengshui.entity.User;
 import com.fengshui.service.InventoryTransactionService;
 import com.fengshui.service.ProductService;
 import com.fengshui.util.CloudinaryConfig;
+import com.fengshui.enums.UserRole;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 
 import java.io.IOException;
@@ -38,6 +41,11 @@ public class ProductAdminController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Kiểm tra quyền: chỉ ADMIN có quyền truy cập
+        if (!checkPermission(request, response, UserRole.ADMIN)) {
+            return;
+        }
+
         // Thiết lập mã hóa ký tự UTF-8 cho request và response để không bị lỗi font tiếng Việt
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
@@ -70,6 +78,11 @@ public class ProductAdminController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Kiểm tra quyền: chỉ ADMIN có quyền truy cập
+        if (!checkPermission(request, response, UserRole.ADMIN)) {
+            return;
+        }
+
         // Đảm bảo mã hóa UTF-8 cho luồng POST dữ liệu lên
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
@@ -320,5 +333,33 @@ public class ProductAdminController extends HttpServlet {
         }
 
         return p;
+    }
+
+    /**
+     * Kiểm tra quyền truy cập dựa trên role của user
+     * @param request HttpServletRequest
+     * @param response HttpServletResponse
+     * @param requiredRoles Các role được phép truy cập
+     * @return true nếu user có quyền, false nếu không
+     */
+    private boolean checkPermission(HttpServletRequest request, HttpServletResponse response, UserRole... requiredRoles)
+            throws IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("currentUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return false;
+        }
+
+        User currentUser = (User) session.getAttribute("currentUser");
+        UserRole userRole = UserRole.fromString(currentUser.getRole());
+
+        for (UserRole role : requiredRoles) {
+            if (userRole == role) {
+                return true;
+            }
+        }
+
+        response.sendRedirect(request.getContextPath() + "/login?error=forbidden");
+        return false;
     }
 }
